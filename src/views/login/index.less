@@ -1,0 +1,120 @@
+  body,html{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  #root,.allWrap{
+    width: 100%;
+    height: 100%;
+  }
+  ::-webkit-input-placeholder{color:#b2c3ec;}
+  input,select{
+    font-size: 13px;
+  }
+  .loginBody{
+    width: 100%;
+    height: 100%;
+    background: url("../../assets/images/bg.jpg") center;
+    background-size: cover;
+  }
+  
+  .loginUl{
+    position: absolute;
+    z-index: 9;
+    margin:-200px 0 0 -180px;
+    padding:38px 54px 0 54px;
+    top:50%;
+    left:50%;
+    width: 391px;
+    height: 355px;
+    background: url("../../assets/images/logBg.png");
+    box-sizing: border-box;
+  
+    li{
+      width: 100%;
+      h2{
+        padding-bottom: 10px;
+        margin-left: 40px;
+        font-size: 0;
+        width: 220px;
+        height: 27px;
+        background: url("../../assets/images/loginLogo.png") no-repeat;
+      }
+      .txt{
+        margin-top: 30px;
+        padding: 0 10px;
+        width: 100%;
+        height: 40px;
+        line-height: 40px;
+        border: 1px solid #6b9cea;
+        box-sizing: border-box;
+        background: #fff;
+        font-size: 14px;
+        border-radius: 5px;
+        color: #333;
+      }
+      &.remLi{
+        position: relative;
+        margin-top: 10px;
+        height: 14px;
+        line-height: 14px;
+        color: #fff;
+        label{
+          color: #fff;
+          font-size: 12px;
+        }
+        #rememberPass{
+          position: absolute;
+          left:0;
+          top:0;
+          width: 100%;
+          opacity: 0;
+        }
+        .selectIcon{
+          margin-top:1px;
+          float: left;
+          width: 12px;
+          height: 12px;
+          background:#fff url("../../assets/images/ls_7.png");
+          border-radius: 2px;
+        }
+        .noSelectIcon{
+          margin-top:1px;
+            float: left;
+          width: 12px;
+          height: 12px;
+          background: url("../../assets/images/ls_8.png"); 
+        }
+        label{
+          margin-left: 10px;
+        }
+      }
+      &.redF{
+        padding-top: 6px;
+        height: 14px;
+        color:#ff2f2f;
+        font-size: 12px;
+      }
+      #loginBtn{
+        margin-top: 30px;
+        width: 100%;
+        height: 40px;
+        background: #5aacff;
+        border: 0;
+        border-radius: 2px;
+        font-size: 18px;
+        color: #FFFFFF;
+        cursor: pointer;
+      }
+    }
+  }
+  
+  .footer{
+    position: absolute;
+    bottom:20px;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    background: none;
+  }
