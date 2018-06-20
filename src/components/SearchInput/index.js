@@ -15,7 +15,13 @@ class SearchInput extends Component {
             value: props.value || '',
             showPrvDisplay: 'none',
             showTxtDisplay: 'none',
-            resData: [],
+            resData: [1,2],
+            selectAray:[
+                {name:'电话',value:'phone'},
+                {name:'身份证',value:'cards'},
+                {name:'进件编号',value:'pushId'},
+            ],
+            selected:'电话',
         }
     }
     render() {
@@ -24,7 +30,6 @@ class SearchInput extends Component {
             height: this.props.preHeight + 'px',
         }
         let preSpanStyle = {
-            width: this.props.preWidth + 'px',
             height: this.props.preHeight + 'px',
             lineHeight: this.props.preHeight + 'px'
         }
@@ -61,11 +66,9 @@ class SearchInput extends Component {
         return (
             <div className="searchInputWrap">
                 <div className='left searchPrv' style={preWrapStyle}>
-                    <span onClick={this.showNext.bind(this)} style={preSpanStyle}>电话</span>
+                    <span onClick={this.showNext.bind(this)} style={preSpanStyle}>{this.state.selected}</span>
                     <ul className='clearfix' style={preUlStyle}>
-                        <li>电话</li>
-                        <li>身份证</li>
-                        <li>进件编号</li>
+                        {this.state.selectAray.map(item=><li key={item.value} onClick={this.changeSelcet.bind(this,item)}>{item.name}</li>)}
                     </ul>
                 </div>
                 <div className="left listWrap" style={txtWSty}>
@@ -100,9 +103,21 @@ class SearchInput extends Component {
             })
         }
     }
+    //文本框变化
     change(e) {
         this.setState({
             value: e.target.value
+        })
+    }
+    //点击下拉菜单选择
+    changeSelcet(item){
+        this.setState({
+            selected:item.name,
+        },res=>{
+            this.setState({
+                showPrvDisplay: 'none',
+                showTxtDisplay: 'none',
+            })
         })
     }
     //搜索

@@ -11,7 +11,7 @@ export default class MainNav extends Component {
         super();
         this.state = {
             hasSearchHearder: true,
-            userName:'张三'
+            userName: '张三'
         }
     }
     componentDidMount() {
@@ -33,11 +33,12 @@ export default class MainNav extends Component {
             })
         }
     }
-    logoutFn(){
+    //退出
+    logoutFn() {
 
     }
     render() {
-        let noSearch = <header className="header">
+        /* let noSearch = <header className="header">
             <NavLink to="/search" className="logo">logo</NavLink>
             <NavLink to='/search' className='nav'>首页</NavLink>
             <NavLink to='/settings' className='nav'>配置规则</NavLink>
@@ -46,24 +47,25 @@ export default class MainNav extends Component {
                 <i className="line"></i>
                 <div className="layoutIcon" onClick={this.logoutFn.bind(this)}>退出</div>
             </div>
-        </header>;
-
-        let hasSearch = <header className="header headerHs">
+        </header>; */
+        let headerDom = <header className={this.state.hasSearchHearder ? 'header headerHs' : 'header'}>
             <a href="/search" className="logo">logo</a>
             <NavLink to='/search' className='nav'>首页</NavLink>
             <NavLink to='/settings' className='nav'>配置规则</NavLink>
-            <div className="left headerS">
-                <SearchInput preWidth='100' preHeight='38' txtWidth='247' txtHeight='38' btnWidth='74' btnHeight='38' btnBg='70%' position='relt'></SearchInput>
-            </div>
+            {this.state.hasSearchHearder ?
+                <div className="left headerS">
+                    <SearchInput preWidth='110' preHeight='38' txtWidth='247' txtHeight='38' btnWidth='74' btnHeight='38' btnBg='70%' position='relt'></SearchInput>
+                </div> : ''
+            }
             <div className="right headRight">
-                <span className="headerUserName">{ this.state.userName }，您好！</span>
+                <span className="headerUserName">{this.state.userName}，您好！</span>
                 <i className="line"></i>
                 <span className="layoutIcon" onClick={this.logoutFn.bind(this)}>退出</span>
             </div>
         </header>;
         return (
             <div className="allWrap">
-                {!this.state.hasSearchHearder ? noSearch : hasSearch}
+                {headerDom}
                 <Switch>
                     <Route path='/search' component={Search}></Route>
                     <Route path='/settings' component={Settings}></Route>
