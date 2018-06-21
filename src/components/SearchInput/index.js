@@ -22,6 +22,7 @@ class SearchInput extends Component {
                 {name:'进件编号',value:'pushId'},
             ],
             selected:'电话',
+            errorFont:'请输入查询内容！',//查询结果不存在！
         }
     }
     render() {
@@ -74,7 +75,7 @@ class SearchInput extends Component {
                 <div className="left listWrap" style={txtWSty}>
                     <input type="text" value={this.state.value} onChange={this.change.bind(this)} onKeyUp={this.search.bind(this)} placeholder="请输入" style={txtWSty} />
                     {!this.state.resData.length ?
-                        <span className='errorF' style={this.props.position==='relt'?errorSty2:errorSty}>查询结果不存在！</span> :
+                        <span className='errorF' style={this.props.position==='relt'?errorSty2:errorSty}>{this.state.errorFont}</span> :
                         <ul style={txtUlSty}>
                             <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
                             <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>

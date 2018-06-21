@@ -1,13 +1,19 @@
 import React, { Component } from 'react';
 import './index.less';
-
+import { DatePicker } from 'antd';
+import locale from 'antd/lib/date-picker/locale/zh_CN';
+import 'moment/locale/zh-cn'
 import LeftTabList from '../../components/LeftTabList';
+import PersonLeftTab from '../../components/PersonLeftTab';
+
+const { RangePicker } = DatePicker;
 
 export default class Persons extends Component {
     constructor() {
         super();
         this.state = {
             id: '',
+            showLeft: true,
         }
     }
     componentDidMount() {
@@ -17,13 +23,29 @@ export default class Persons extends Component {
         }, () => {
             console.log(this.state.id);
         })
+        document.querySelector('.mainDetail').addEventListener('scroll', function () {
+            this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
+        })
+    }
+    changeShow() {
+        if (this.state.showLeft) {
+            this.setState({
+                showLeft: false,
+            })
+        } else {
+            this.setState({
+                showLeft: true,
+            })
+        }
     }
     render() {
         return (
-            <section className="allWrap containers">
-                <div className="leftSide">
+            <section className="containers">
+                <div className="leftSide" style={{ display: this.state.showLeft ? 'block' : 'none' }}>
                     <h5 className="hTit">预警提示</h5>
-                    <LeftTabList></LeftTabList>
+                    <div className="leftUlWraps">
+                        <LeftTabList></LeftTabList>
+                    </div>
                     <h5 className="hTit">主体属性</h5>
                     <ul className="leftMainUl clearfix">
                         <li>
@@ -44,10 +66,18 @@ export default class Persons extends Component {
                             <i>查看详情</i>
                         </li>
                     </ul>
+                    <div className="mainDetail">
+                        <PersonLeftTab></PersonLeftTab>
+                    </div>
                 </div>
-                <div className="rightSide">
-                    右侧大块
-               </div>
+                <div className={this.state.showLeft ? 'changeSorH' : 'changeSorH2'} onClick={this.changeShow.bind(this)}></div>
+                <div className={this.state.showLeft ? 'rightSide' : 'rightSide2'}>
+                    <div style={{ border: '1px red solid', width: '100%', height: '700px' }}>
+                        <div className="pickerWrap">
+                            <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale}></RangePicker>
+                        </div>
+                    </div>
+                </div>
             </section>
         )
     }
