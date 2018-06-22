@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 import './index.less';
-import { DatePicker } from 'antd';
+import { DatePicker, Select } from 'antd';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
 import 'moment/locale/zh-cn'
 import LeftTabList from '../../components/LeftTabList';
 import PersonLeftTab from '../../components/PersonLeftTab';
+import Button from '../../components/Button';
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 export default class Persons extends Component {
     constructor() {
@@ -37,6 +40,10 @@ export default class Persons extends Component {
                 showLeft: true,
             })
         }
+    }
+    //日期后下拉菜单选择
+    handleChange(value) {
+        console.log(`selected ${value}`);
     }
     render() {
         return (
@@ -71,13 +78,71 @@ export default class Persons extends Component {
                     </div>
                 </div>
                 <div className={this.state.showLeft ? 'changeSorH' : 'changeSorH2'} onClick={this.changeShow.bind(this)}></div>
+                {/* 右侧大块  start */}
                 <div className={this.state.showLeft ? 'rightSide' : 'rightSide2'}>
-                    <div style={{ border: '1px red solid', width: '100%', height: '700px' }}>
-                        <div className="pickerWrap">
-                            <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale}></RangePicker>
+                    <div className="rightCon clearfix">
+                        <div className="linkToWrap">
+                            <Link to={`/allShow/${this.state.id}`}>切换为全貌图</Link>
+                        </div>
+                        {/* 筛选条件 */}
+                        <ul className="conUl">
+                            <li className="conTitle">
+                                <label className="left">时间：</label>
+                                <div className="left pickerWrap clearfix">
+                                    <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale}></RangePicker>
+                                </div>
+                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
+                                    <Option value="lastmonth">近一月</Option>
+                                    <Option value="lastweek">近一周</Option>
+                                    <Option value="selfding">自定义</Option>
+                                </Select>
+                                <label htmlFor="">产品类型：</label>
+                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
+                                    <Option value="lastmonth">全部</Option>
+                                    <Option value="lastweek">近一周</Option>
+                                    <Option value="selfding">自定义</Option>
+                                </Select>
+                                <label htmlFor="">关联层次：</label>
+                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
+                                    <Option value="lastmonth">全部</Option>
+                                    <Option value="lastweek">近一周</Option>
+                                    <Option value="selfding">自定义</Option>
+                                </Select>
+                                <Button defaultValue="搜索"></Button>
+                            </li>
+                        </ul>
+                        {/* 图表说明*/}
+                        <ul className="imgMessUl">
+                            <li>
+                                图释：
+                            </li>
+                            <li>
+                                <i className="ls1"></i>
+                                <span>放款成功</span>
+                            </li>
+                            <li>
+                                <i className="ls2"></i>
+                                <span>拒绝</span>
+                            </li>
+                            <li>
+                                <i className="ls3"></i>
+                                <span>逾期</span>
+                            </li>
+                            <li>
+                                <i className="ls4"></i>
+                                <span>待审核</span>
+                            </li>
+                            <li>
+                                <i className="ls5"></i>
+                                <span>黑名单</span>
+                            </li>
+                        </ul>
+                        <div className="drowImgDiv">
+
                         </div>
                     </div>
                 </div>
+                {/* 右侧大块  end */}
             </section>
         )
     }

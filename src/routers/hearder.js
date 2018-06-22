@@ -4,6 +4,7 @@ import { Route, NavLink, Redirect, Switch } from 'react-router-dom';
 import Search from '../views/search';
 import Settings from '../views/setTool';
 import Persons from '../views/persons';
+import AllShow from '../views/allShow';
 import SearchInput from '../components/SearchInput';
 
 export default class MainNav extends Component {
@@ -70,6 +71,7 @@ export default class MainNav extends Component {
                     <Route path='/search' component={Search}></Route>
                     <Route path='/settings' component={Settings}></Route>
                     <Route path='/persons/:id' component={Persons}></Route>
+                    <Route path='/allShow/:id' component={AllShow}></Route>
                     <Redirect to="/search" />
                 </Switch>
                 {/* 用redirect跳转相同名称的路由 必须用switch */}

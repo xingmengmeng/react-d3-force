@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import RouterMap from './routers/index';
 import Loading from './components/Loading'
 import store from './store';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 
 
 class App extends Component {
@@ -34,9 +34,9 @@ class App extends Component {
 }
 
 export default connect(
-  state=>{   //state为形参  相当于store中的store.state  前面的key showLoading为当前页面中使用的参数名  如上this.props.showLoading
-    return{
-      showLoading:state.showLoading
+  state => {   //state为形参  相当于store中的store.state  前面的key showLoading为当前页面中使用的参数名  如上this.props.showLoading
+    return {
+      showLoading: state.showLoading
     }
   }
 )(App);

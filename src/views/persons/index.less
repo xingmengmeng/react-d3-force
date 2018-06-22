@@ -48,6 +48,73 @@
     overflow-y: scroll;
 }
 .pickerWrap{
+    margin-right: 10px;
     position: relative;
-    width:200px;
+    width:350px;
+    z-index:1;
+}
+.rightCon{
+    width:100%;
+    border:1px lightblue solid;
+    .linkToWrap{
+        margin:5px 0 30px 0;
+        a{ 
+            padding:6px 30px 6px 40px;
+            color:#666;
+            background: url(../../assets/images/icon1.png) 10px center no-repeat;
+            border:1px @boder-gray solid;
+            border-radius: 5px;
+        }
+    }
+    .conUl{
+        padding-bottom: 10px;
+        border-bottom: 1px #eeeeee solid;
+        .conTitle{
+            width: 100%;
+            margin-bottom: 15px;
+            label{
+                display: inline-block;
+                margin:5px 5px 0 0;
+                // width: 80px;
+                text-align: right;
+            }
+            .ant-select{
+                margin-right: 20px;
+            }
+        }
+    }
+    .imgMessUl{
+        height: 30px;
+        li{
+            float: left;
+        }
+        i{
+            margin:0 10px 0 20px;
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #a9cf54;
+            border-radius: 50%;
+            &.ls2{
+                background: #febf29;
+            }
+            &.ls3{
+                background: #ff3008;
+            }
+            &.ls4{
+                background: #36c8e3;
+            }
+            &.ls5{
+                background: #2a3842;
+            }
+        }
+        span{
+            float: left;
+            height: 20px;
+            line-height: 20px;
+        }
+    }
+    .drowImgDiv{
+        height: 700px;
+    }
 }

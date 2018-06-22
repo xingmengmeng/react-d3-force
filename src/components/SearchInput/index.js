@@ -15,14 +15,21 @@ class SearchInput extends Component {
             value: props.value || '',
             showPrvDisplay: 'none',
             showTxtDisplay: 'none',
-            resData: [1,2],
-            selectAray:[
-                {name:'电话',value:'phone'},
-                {name:'身份证',value:'cards'},
-                {name:'进件编号',value:'pushId'},
+            resData: [1, 2],
+            selectAray: [
+                { name: '电话', value: 'phone' },
+                { name: '身份证', value: 'cards' },
+                { name: '进件编号', value: 'pushId' },
             ],
-            selected:'电话',
-            errorFont:'请输入查询内容！',//查询结果不存在！
+            selected: '电话',
+            errorFont: '请输入查询内容！',//查询结果不存在！
+        }
+    }
+    componentDidMount() {
+        document.body.onclick = (e) => {
+            this.setState({
+                showTxtDisplay: 'none',
+            })
         }
     }
     render() {
@@ -38,6 +45,7 @@ class SearchInput extends Component {
             display: this.state.showPrvDisplay,
             width: this.props.preWidth + 'px',
             top: this.props.preHeight + 'px',
+            transition: '2s',
         }
         let txtWSty = {
             width: this.props.txtWidth + 'px',
@@ -54,29 +62,29 @@ class SearchInput extends Component {
             backgroundSize: this.props.btnBg
         }
         let errorSty = {
-            left:'0',
+            left: '0',
             display: this.state.showTxtDisplay,
             top: Number(this.props.txtHeight) + 5 + 'px',
         }
-        let errorSty2={
-            width:'120px',
+        let errorSty2 = {
+            width: '120px',
             display: this.state.showTxtDisplay,
-            left:(Number(this.props.btnWidth)+Number(this.props.txtWidth)+10+'px'),
-            top:'10px',
+            left: (Number(this.props.btnWidth) + Number(this.props.txtWidth) + 10 + 'px'),
+            top: '10px',
         }
         return (
             <div className="searchInputWrap">
-                <div className='left searchPrv' style={preWrapStyle}>
-                    <span onClick={this.showNext.bind(this)} style={preSpanStyle}>{this.state.selected}</span>
+                <div className='left searchPrv' style={preWrapStyle} onMouseEnter={this.showNext.bind(this)} onMouseLeave={this.hideNext.bind(this)}>
+                    <span id="showNext" style={preSpanStyle}>{this.state.selected}</span>
                     <ul className='clearfix' style={preUlStyle}>
-                        {this.state.selectAray.map(item=><li key={item.value} onClick={this.changeSelcet.bind(this,item)}>{item.name}</li>)}
+                        {this.state.selectAray.map(item => <li key={item.value} onClick={this.changeSelcet.bind(this, item)}>{item.name}</li>)}
                     </ul>
                 </div>
                 <div className="left listWrap" style={txtWSty}>
                     <input type="text" value={this.state.value} onChange={this.change.bind(this)} onKeyUp={this.search.bind(this)} placeholder="请输入" style={txtWSty} />
                     {!this.state.resData.length ?
-                        <span className='errorF' style={this.props.position==='relt'?errorSty2:errorSty}>{this.state.errorFont}</span> :
-                        <ul style={txtUlSty}>
+                        <span className='errorF' style={this.props.position === 'relt' ? errorSty2 : errorSty}>{this.state.errorFont}</span> :
+                        <ul className="searchUl" style={txtUlSty} onClick={this.hideSelf.bind(this)}>
                             <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
                             <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
                             <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
@@ -94,15 +102,14 @@ class SearchInput extends Component {
     }
     //显示隐藏下拉菜单
     showNext() {
-        if (this.state.showPrvDisplay === 'none') {
-            this.setState({
-                showPrvDisplay: 'block',
-            })
-        } else {
-            this.setState({
-                showPrvDisplay: 'none',
-            })
-        }
+        this.setState({
+            showPrvDisplay: 'block',
+        })
+    }
+    hideNext() {
+        this.setState({
+            showPrvDisplay: 'none',
+        })
     }
     //文本框变化
     change(e) {
@@ -111,14 +118,23 @@ class SearchInput extends Component {
         })
     }
     //点击下拉菜单选择
-    changeSelcet(item){
+    changeSelcet(item) {
+        let name = item.name;
+        let changeSelcted = this.state.selected === name ? false : true;
         this.setState({
-            selected:item.name,
-        },res=>{
-            this.setState({
-                showPrvDisplay: 'none',
-                showTxtDisplay: 'none',
-            })
+            selected: name,
+        }, res => {
+            if (changeSelcted) {
+                this.setState({
+                    showPrvDisplay: 'none',
+                    showTxtDisplay: 'none',
+                })
+            } else {
+                this.setState({
+                    showPrvDisplay: 'none',
+                })
+            }
+
         })
     }
     //搜索
@@ -132,6 +148,11 @@ class SearchInput extends Component {
         this.setState({
             showPrvDisplay: 'none',
             showTxtDisplay: 'block',
+        })
+    }
+    hideSelf() {
+        this.setState({
+            showTxtDisplay: 'none',
         })
     }
 }
