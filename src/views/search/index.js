@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import './index.less'
-import { getSearchList } from '../../api/api.js';
+import {get} from '../../api/http';
+import './index.less';
 import SearchInput from '../../components/SearchInput';
 import imgSrc from '../../assets/images/searchLogo.png';
 class Search extends Component {
@@ -15,21 +15,17 @@ class Search extends Component {
             <div className="searchMain">
                 <div className='seWrap'>
                     <img src={imgSrc} alt='logo'/>
-                    <SearchInput value="" fn={this.toSearch.bind(this)} preWidth='120' preHeight='50' txtWidth='400' txtHeight='50' btnWidth='120' btnHeight='50' />
+                    <SearchInput value="" preWidth='120' preHeight='50' txtWidth='400' txtHeight='50' btnWidth='120' btnHeight='50' />
                 </div>
             </div>
         )
     }
-    toSearch(value) {
-
-        getSearchList().then(res => {
-            this.setState({
-                seVal: value,
-                listData: res.data.data.dataInfo
-            }, () => {
-                //this.refs.pages.newSearch();//重新查询  setState的回调函数
-            })
-        });
+    componentDidMount(){
+        get('/login/login/isLogin.gm').then(res=>{
+            if(res.data.msg!=='成功'||res.data.code!=='200'){
+                window.location.href='/login';
+            }
+        })
     }
 }
 export default Search;

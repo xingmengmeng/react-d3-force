@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { post } from '../../api/http';
 import './index.less';
 /**
  * preWidth：搜索框前面的下拉菜单的宽
@@ -15,13 +16,14 @@ class SearchInput extends Component {
             value: props.value || '',
             showPrvDisplay: 'none',
             showTxtDisplay: 'none',
-            resData: [1, 2],
+            resData: [],
             selectAray: [
-                { name: '电话', value: 'phone' },
-                { name: '身份证', value: 'cards' },
-                { name: '进件编号', value: 'pushId' },
+                { name: '电话', value: '1' },
+                { name: '身份证', value: '2' },
+                { name: '进件编号', value: '3' },
             ],
             selected: '电话',
+            selectedId:'1',
             errorFont: '请输入查询内容！',//查询结果不存在！
         }
     }
@@ -85,14 +87,8 @@ class SearchInput extends Component {
                     {!this.state.resData.length ?
                         <span className='errorF' style={this.props.position === 'relt' ? errorSty2 : errorSty}>{this.state.errorFont}</span> :
                         <ul className="searchUl" style={txtUlSty} onClick={this.hideSelf.bind(this)}>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
-                            <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li>
+                            {/* <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li> */}
+                            {this.state.resData.map(item => <li key={item.data}> {item.value}  <Link to={`/persons/${item.data}`} className="right">查看图谱</Link> </li>)}
                         </ul>
                     }
                 </div>
@@ -123,6 +119,7 @@ class SearchInput extends Component {
         let changeSelcted = this.state.selected === name ? false : true;
         this.setState({
             selected: name,
+            selectedId: item.value,
         }, res => {
             if (changeSelcted) {
                 this.setState({
@@ -145,9 +142,14 @@ class SearchInput extends Component {
     }
     //搜索
     getList() {
-        this.setState({
-            showPrvDisplay: 'none',
-            showTxtDisplay: 'block',
+        post('/graphNew/search.gm', { 'searchType': this.state.selectedId, 'searchNo': this.state.value }).then(res => {
+            if (res.data.code === '200') {
+                this.setState({
+                    resData: res.data.data,
+                    showPrvDisplay: 'none',
+                    showTxtDisplay: 'block',
+                })
+            }
         })
     }
     hideSelf() {

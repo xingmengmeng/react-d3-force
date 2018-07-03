@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Route, NavLink, Redirect, Switch } from 'react-router-dom';
+import {get} from '../api/http';
 
 import Search from '../views/search';
 import Settings from '../views/setTool';
@@ -12,12 +13,15 @@ export default class MainNav extends Component {
         super();
         this.state = {
             hasSearchHearder: true,
-            userName: '张三'
+            userName: ''
         }
     }
     componentDidMount() {
         let pathName = this.props.location.pathname;
         this.viewHeader(pathName);
+        this.setState({
+            userName:localStorage.getItem('userName'),
+        })
     }
     componentWillReceiveProps(nextProps) {
         let pathName = nextProps.location.pathname;
@@ -36,7 +40,11 @@ export default class MainNav extends Component {
     }
     //退出
     logoutFn() {
-
+        get('/login/login/logout.gm').then(res=>{
+            if(res.data.code==='200'){
+                window.location.href = '/login';
+            }
+        })
     }
     render() {
         /* let noSearch = <header className="header">

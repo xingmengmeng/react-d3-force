@@ -1,6 +1,6 @@
 import { get, post } from './http';
 export function getSearchList() {
-    const result = get('/biPc/login/getPcMenus.gm');
+    const result = get('/graphNew/search.gm');
     return result;
 }
 export function postLogin(url,param){

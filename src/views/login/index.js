@@ -80,7 +80,7 @@ class Login extends Component {
                 if (isSave) {
                     /*{'userName':usernm,'userPwd':userpsw,'isRemember':true,'isCookerLogin':false}*/
                     /*登录接口*/
-                    post('/biPc/login/dologin.gm', { "userName": usernm, "userPwd": userpsw, "isRemember": true, "isCookerLogin": this.isCookerLogin }).then((response) => {
+                    post('/login/dologin.gm', { "userName": usernm, "userPwd": userpsw, "isRemember": true, "isCookerLogin": this.isCookerLogin }).then((response) => {
                         if (response.data.code !== '200') {
                             this.setState({
                                 errorMessage: response.data.msg
@@ -94,20 +94,19 @@ class Login extends Component {
                             return;
                         }
                         if (this.isCookerLogin === false) {
-                            userpsw = response.data.data.dataInfo.passWord;
+                            userpsw = response.data.data.passWord;
                         }
                         if (response.data.code === '200') {
                             this.setCookie(usernm, userpsw);
-                            localStorage.meijieAdminFlag = response.data.data.dataInfo.meijieAdminFlag;
                             window.location.href = '/index';
                         } else {
                             this.setState({
-                                errorMessage: response.data.data.dataInfo.responseMsg
+                                errorMessage: response.data.data.responseMsg
                             })
                         }
                     })
                 } else {
-                    post('/biPc/login/dologin.gm', { "userName": usernm, "userPwd": userpsw, "isRemember": true, "isCookerLogin": this.isCookerLogin }).then((response) => {
+                    post('/login/dologin.gm', { "userName": usernm, "userPwd": userpsw, "isRemember": true, "isCookerLogin": this.isCookerLogin }).then((response) => {
                         console.log(response.data.data);
                         if (response.data.code !== '200') {
                             this.setState({
@@ -123,11 +122,10 @@ class Login extends Component {
                         }
                         if (response.data.code === '200') {
                             this.setCookie(usernm, userpsw);
-                            localStorage.meijieAdminFlag = response.data.data.dataInfo.meijieAdminFlag;
                             window.location.href = '/index';
                         } else {
                             this.setState({
-                                errorMessage: response.data.data.dataInfo.responseMsg
+                                errorMessage: response.data.data.responseMsg
                             })
                         }
                         this.setCookie("", "");
