@@ -41,9 +41,13 @@ export default class Persons extends Component {
             })
         }
     }
-    //日期后下拉菜单选择
+    //日期后面的下拉菜单选择
     handleChange(value) {
         console.log(`selected ${value}`);
+    }
+    //日历组件
+    timeChange(data,dateStringAry){
+        console.log(dateStringAry);
     }
     render() {
         return (
@@ -89,7 +93,7 @@ export default class Persons extends Component {
                             <li className="conTitle">
                                 <label className="left">时间：</label>
                                 <div className="left pickerWrap clearfix">
-                                    <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale}></RangePicker>
+                                    <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale} onChange={this.timeChange.bind(this)}></RangePicker>
                                 </div>
                                 <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
                                     <Option value="lastmonth">近一月</Option>
