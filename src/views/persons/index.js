@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import * as d3 from "d3";
 import { post } from '../../api/http';
 import './index.less';
 import { DatePicker, Select } from 'antd';
@@ -8,6 +9,9 @@ import 'moment/locale/zh-cn'
 import LeftTabList from '../../components/LeftTabList';
 import PersonLeftTab from '../../components/PersonLeftTab';
 import Button from '../../components/Button';
+
+import _force from '../../components/D3Set/_force';
+import { setLinks, tick } from '../../components/D3Set/_d3Utils';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -21,12 +25,18 @@ export default class Persons extends Component {
             showAppDetail: false,//是否显示进件详情
             appDetailData: [],//进件详情数据
             LeftTabListResData: [],//预警提示数据
-            persionMain:[],// 主体属性
+            persionMain: [],// 主体属性
+            graph: [],
         }
     }
     componentDidMount() {
-        this.getPersonGraph();
-        this.getListAppInfo();
+        let id = this.props.match.params.id;
+        this.setState({
+            id: id,
+        }, () => {
+            this.getPersonGraph();
+            this.getListAppInfo();
+        })
         document.querySelector('.mainDetail').addEventListener('scroll', function () {
             this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
         })
@@ -49,7 +59,10 @@ export default class Persons extends Component {
                 this.setState({
                     showAppDetail: false,
                     LeftTabListResData: resData.graphWarnings.concat(),//预警提示
-                    persionMain:resData.persionMain,
+                    persionMain: resData.persionMains,
+                    graph: resData,
+                }, () => {
+                    this.drawChart();
                 })
             }
         })
@@ -78,6 +91,9 @@ export default class Persons extends Component {
                 showLeft: true,
             })
         }
+        setTimeout(() => {
+            this.drawChart();
+        }, 220)
     }
     //日期后面的下拉菜单选择
     handleChange(value) {
@@ -86,6 +102,215 @@ export default class Persons extends Component {
     //日历组件
     timeChange(data, dateStringAry) {
         console.log(dateStringAry);
+    }
+    //画图
+    drawChart() {
+        const _this = this;
+        //每次请求完重新加载显示图
+        d3.select('#svgId').remove();   //删除整个SVG
+        d3.select('#svgId')
+            .selectAll('*')
+            .remove();                    //清空SVG中的内容
+        //开始设置
+        let nodes = this.state.graph.nodes,
+            links = this.state.graph.links;
+        //设置连线  双向及多条
+        setLinks(links);
+
+        const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
+            h = document.querySelector('.drowImgDiv').clientHeight;
+        let chartDiv = d3.select('body').select('#chartId');
+        let svg = chartDiv.append("svg")
+            .attr('id', 'svgId')
+            .attr("width", w)
+            .attr("height", h);
+
+        var link = svg.selectAll(".link");
+        var node = svg.selectAll(".node");
+
+        //引入力导向图
+        let centerX, centerY;
+        centerX = w / 2;
+        centerY = h / 2;
+        let force = _force(centerX, centerY);
+
+        force.nodes(nodes);
+        force.force("link").links(links);
+        let tmpx, tmpy;
+        //整体拖拽 移动
+        svg.call(d3.drag()
+            .on("start", function (e) {
+                if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
+                tmpx = d3.event.x;
+                tmpy = d3.event.y;
+            })
+            .on("drag", function (e) {
+                let x = d3.event.x - tmpx,
+                    y = d3.event.y - tmpy;
+                force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
+            })
+            .on("end", function (e) {
+                if (!d3.event.active) force.alphaTarget(0);
+                let x = d3.event.x - tmpx,
+                    y = d3.event.y - tmpy;
+                force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
+                centerX = centerX + x / 2
+                centerY = centerY + y / 2;
+            })
+        )
+        var zoom = d3.zoom()
+            .scaleExtent([0.2, 1.5])//用于设置最小和最大的缩放比例  
+            .on("zoom", function () {
+                svg.selectAll('path').attr("transform", d3.event.transform);
+                svg.selectAll('marker').attr("transform", d3.event.transform);
+                svg.selectAll('circle').attr("transform", d3.event.transform);
+                svg.selectAll('text').attr("transform", d3.event.transform);
+                svg.selectAll('textPath').attr("transform", d3.event.transform);
+            })
+        svg.call(zoom)
+
+        link = link.data(links)
+            .enter().append("path")
+            .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
+            .attr('id', function (d, i) { return 'path' + i; })
+            .attr("class", "link");
+        //节点
+        node = node.data(nodes)
+            .enter().append("circle")
+            .attr("r", function (d) {
+                if (d.type === 'Person' || d.type === 'Main') {//根据type判断圈的大小
+                    return 38;
+                } else {
+                    return 32;
+                }
+            })
+            .style("fill", function (node, i) {
+                return _this.fillColor(node);
+            })
+            .attr('stroke', function (d) {
+                return _this.strColor(d);
+            })
+            .attr('stroke-width', '3px')
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on('click', function (d) {
+                _this.nodeClick.call(this, d, this);
+                _this.nodeColor(d);
+            });
+        _this.nodes = node;
+        //节点上的文字
+        var svg_texts = svg.selectAll("text")
+            .data(nodes)
+            .enter()
+            .append("text")
+            .style("fill", "#fff")
+            .attr("x", 0)
+            .attr("y", 0)
+            .text(function (d) {
+                return d.name;
+            })
+            .attr('text-anchor', 'middle')
+            .attr('class', 'nodesText')
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on('click', function (d) {
+                _this.nodeClick.call(this, d, this);
+                _this.nodeColor(d);
+            });
+        //线上的文字
+        svg.selectAll(".linetext")
+            .data(links)
+            .enter()
+            .append("text")
+            .attr("class", "linetext")
+            .attr('x', '0')
+            .attr('dy', '4')
+            .attr('text-anchor', 'middle')
+            .append('textPath').attr(
+                'xlink:href', function (d, i) {
+                    return '#path' + i;
+                }
+            )
+            .attr('startOffset', '50%')
+            .text(function (d) {
+                return d.type;
+            })
+            .on('click', _this.lineClick);
+
+        force.on("tick", function () {
+            tick(link, node, svg_texts)
+        });
+        function dragstarted(d) {
+            if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
+            d.fx = d.x;    //d.x是当前位置，d.fx是固定位置
+            d.fy = d.y;
+        }
+
+        function dragged(d) {
+            d.fx = d3.event.x;
+            d.fy = d3.event.y;
+        }
+
+        function dragended(d) {
+            if (!d3.event.active) force.alphaTarget(0);
+            // d.fx = d.x;       //解除dragged中固定的坐标
+            // d.fy = d.y;
+            d.fx = null;
+            d.fy = null;
+        }
+    }
+    //颜色设置  根绝类型设置
+    fillColor(node) {
+        if (node.type === 'Person') {
+            return '#8588ff'
+        } else if (node.type === 'Main') {
+            return '#82c3e8'
+        } else if (node.type === 'Apply') {
+            return '#f66f13'
+        } else if (node.type === 'Address') {
+            return '#c3e20e'
+        } else if (node.type === 'Company') {
+            return '#ed6cac'
+        } else if (node.type === 'BankCard') {
+            return '#50e3c2'
+        } else if (node.type === 'SocialMediaId') {
+            return '#69aef4'
+        } else if (node.type === 'Device') {
+            return '#ffbf2f'
+        } else if (node.type === 'HouseProperty') {
+            return '#8de0ff'
+        } else if (node.type === 'Telephone') {
+            return '#fbc999'
+        } else {
+            return '#ccc'
+        }
+    }
+    strColor(node) {
+        if (node.type === 'Person') {
+            return 'rgb(194,195,255)'
+        } else if (node.type === 'Main') {
+            return 'rgb(182,228,254)'
+        } else if (node.type === 'Apply') {
+            return 'rgb(250,183,137)'
+        } else if (node.type === 'Address') {
+            return 'rgb(225,240,134)'
+        } else if (node.type === 'Company') {
+            return 'rgb(246,181,213)'
+        } else if (node.type === 'BankCard') {
+            return 'rgb(167,241,224)'
+        } else if (node.type === 'SocialMediaId') {
+            return 'rgb(180,214,249)'
+        } else if (node.type === 'Device') {
+            return 'rgb(255,223,151)'
+        } else if (node.type === 'HouseProperty') {
+            return 'rgb(198,239,255)'
+        } else if (node.type === 'Telephone') {
+            return 'rgb(254,220,187)'
+        }
     }
     render() {
         return (
@@ -97,11 +322,15 @@ export default class Persons extends Component {
                     </div>
                     <h5 className="hTit">主体属性</h5>
                     <ul className="leftMainUl clearfix">
-                        <li>
-                            <label>当前进件编号</label>
-                            <span>{this.state.persionMain.appNo}</span>
-                        </li>
-                        <li>
+                        {this.state.persionMain.map((item, index) =>
+                            <li key={index}>
+                                <label>{item.property}</label>
+                                <span>{item.value}</span>
+                                {index === this.state.persionMain.length - 1 ? <i onClick={this.showAppDetaiFn.bind(this)}>查看详情</i> : ''}
+                            </li>
+                        )}
+
+                        {/* <li>
                             <label>客户姓名</label>
                             <span>{this.state.persionMain.name}</span>
                         </li>
@@ -113,7 +342,7 @@ export default class Persons extends Component {
                             <label>申请进件数量</label>
                             <span>{this.state.persionMain.applyNum}</span>
                             <i onClick={this.showAppDetaiFn.bind(this)}>查看详情</i>
-                        </li>
+                        </li> */}
                     </ul>
                     <div className="mainDetail">
                         {this.state.showAppDetail ? <PersonLeftTab detailData={this.state.appDetailData} /> : ''}
@@ -180,7 +409,9 @@ export default class Persons extends Component {
                             </li>
                         </ul>
                         <div className="drowImgDiv">
+                            <div className="chartWrap box-shadow" id="chartId">
 
+                            </div>
                         </div>
                     </div>
                 </div>
