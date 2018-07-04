@@ -1,18 +1,18 @@
-import React,{Component} from 'react';
+import React, { Component } from 'react';
 import './index.less';
-export default class LeftTabList extends Component{
-    render(){
-        return(
+export default class LeftTabList extends Component {
+    render() {
+        return (
             <section className="tabWrap">
                 <table width="100%">
                     <thead>
                         <tr>
                             <th width="60">关联类型</th>
-                            <th>关联<br/>进件数</th>
-                            <th>关联<br/>客户数</th>
+                            <th>关联<br />进件数</th>
+                            <th>关联<br />客户数</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    {/* <tbody>
                         <tr>
                             <td>一级关联</td>
                             <td className="blueF">3</td>
@@ -58,6 +58,16 @@ export default class LeftTabList extends Component{
                             <td className="blueF">3</td>
                             <td className="blueF">1</td>
                         </tr>
+                    </tbody> */}
+                    <tbody>
+                        {this.props.LeftTabListData.map((item,index) =>
+                            <tr key={index}>
+                                <td>{item.linkType}</td>
+                                <td className="blueF" ids={item.ids}>{item.linkEntryNum}</td>
+                                <td className="blueF" ids={item.ids}>{item.linkCustomerNum}</td>
+                            </tr>
+                        )}
+
                     </tbody>
                 </table>
             </section>

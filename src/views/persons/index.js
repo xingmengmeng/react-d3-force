@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { post } from '../../api/http';
 import './index.less';
 import { DatePicker, Select } from 'antd';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
@@ -15,19 +16,56 @@ export default class Persons extends Component {
     constructor() {
         super();
         this.state = {
-            id: '',
-            showLeft: true,
+            id: '',//导航过来的id
+            showLeft: true,//左侧信息是否显示
+            showAppDetail: false,//是否显示进件详情
+            appDetailData: [],//进件详情数据
+            LeftTabListResData: [],//预警提示数据
+            persionMain:[],// 主体属性
         }
     }
     componentDidMount() {
-        let id = this.props.match.params.id;
+        this.getPersonGraph();
+        this.getListAppInfo();
+        document.querySelector('.mainDetail').addEventListener('scroll', function () {
+            this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
+        })
+    }
+    componentWillReceiveProps(nextProps) {
+        let id = nextProps.match.params.id;
+        if (id === this.state.id || this.state.id === '') return;
         this.setState({
             id: id,
         }, () => {
-            console.log(this.state.id);
+            this.getPersonGraph();
+            this.getListAppInfo();
         })
-        document.querySelector('.mainDetail').addEventListener('scroll', function () {
-            this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
+    }
+    //查询人物图信息
+    getPersonGraph() {
+        post('/graphNew/personGraph.gm', { 'appNo': this.state.id }).then(res => {
+            if (res.data.code === '200') {
+                let resData = res.data.data;
+                this.setState({
+                    showAppDetail: false,
+                    LeftTabListResData: resData.graphWarnings.concat(),//预警提示
+                    persionMain:resData.persionMain,
+                })
+            }
+        })
+    }
+    //查询进件详细信息
+    getListAppInfo() {
+        post('/graphNew/listAppInfo.gm', { 'appNo': this.state.id }).then(res => {
+            this.setState({
+                appDetailData: res.data.data,
+            })
+        })
+    }
+    //显示进件信息详情
+    showAppDetaiFn() {
+        this.setState({
+            showAppDetail: true,
         })
     }
     changeShow() {
@@ -46,7 +84,7 @@ export default class Persons extends Component {
         console.log(`selected ${value}`);
     }
     //日历组件
-    timeChange(data,dateStringAry){
+    timeChange(data, dateStringAry) {
         console.log(dateStringAry);
     }
     render() {
@@ -55,30 +93,30 @@ export default class Persons extends Component {
                 <div className="leftSide" style={{ display: this.state.showLeft ? 'block' : 'none' }}>
                     <h5 className="hTit">预警提示</h5>
                     <div className="leftUlWraps">
-                        <LeftTabList></LeftTabList>
+                        <LeftTabList LeftTabListData={this.state.LeftTabListResData}></LeftTabList>
                     </div>
                     <h5 className="hTit">主体属性</h5>
                     <ul className="leftMainUl clearfix">
                         <li>
                             <label>当前进件编号</label>
-                            <span>MJ0001</span>
+                            <span>{this.state.persionMain.appNo}</span>
                         </li>
                         <li>
                             <label>客户姓名</label>
-                            <span>张三三</span>
+                            <span>{this.state.persionMain.name}</span>
                         </li>
                         <li>
                             <label>身份证号</label>
-                            <span>239887636526252636</span>
+                            <span>{this.state.persionMain.idNo}</span>
                         </li>
                         <li>
                             <label>申请进件数量</label>
-                            <span>5</span>
-                            <i>查看详情</i>
+                            <span>{this.state.persionMain.applyNum}</span>
+                            <i onClick={this.showAppDetaiFn.bind(this)}>查看详情</i>
                         </li>
                     </ul>
                     <div className="mainDetail">
-                        <PersonLeftTab></PersonLeftTab>
+                        {this.state.showAppDetail ? <PersonLeftTab detailData={this.state.appDetailData} /> : ''}
                     </div>
                 </div>
                 <div className={this.state.showLeft ? 'changeSorH' : 'changeSorH2'} onClick={this.changeShow.bind(this)}></div>

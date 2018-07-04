@@ -25,6 +25,7 @@ export default class MainNav extends Component {
     }
     componentWillReceiveProps(nextProps) {
         let pathName = nextProps.location.pathname;
+
         this.viewHeader(pathName);
     }
     viewHeader(pathName) {
