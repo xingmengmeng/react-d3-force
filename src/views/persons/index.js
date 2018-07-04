@@ -9,9 +9,10 @@ import 'moment/locale/zh-cn'
 import LeftTabList from '../../components/LeftTabList';
 import PersonLeftTab from '../../components/PersonLeftTab';
 import Button from '../../components/Button';
-
+//D3的方法
 import _force from '../../components/D3Set/_force';
-import { setLinks, tick } from '../../components/D3Set/_d3Utils';
+import { setLinks, tick, setSvg } from '../../components/D3Set/_d3Utils';
+import { dragstarted, dragged, dragended } from '../../components/D3Set/nodeDrag';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -108,9 +109,7 @@ export default class Persons extends Component {
         const _this = this;
         //每次请求完重新加载显示图
         d3.select('#svgId').remove();   //删除整个SVG
-        d3.select('#svgId')
-            .selectAll('*')
-            .remove();                    //清空SVG中的内容
+        d3.select('#svgId').selectAll('*').remove();                    //清空SVG中的内容
         //开始设置
         let nodes = this.state.graph.nodes,
             links = this.state.graph.links;
@@ -132,42 +131,14 @@ export default class Persons extends Component {
         let centerX, centerY;
         centerX = w / 2;
         centerY = h / 2;
-        let force = _force(centerX, centerY);
 
+        let force = _force(centerX, centerY);
         force.nodes(nodes);
         force.force("link").links(links);
-        let tmpx, tmpy;
+
         //整体拖拽 移动
-        svg.call(d3.drag()
-            .on("start", function (e) {
-                if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
-                tmpx = d3.event.x;
-                tmpy = d3.event.y;
-            })
-            .on("drag", function (e) {
-                let x = d3.event.x - tmpx,
-                    y = d3.event.y - tmpy;
-                force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
-            })
-            .on("end", function (e) {
-                if (!d3.event.active) force.alphaTarget(0);
-                let x = d3.event.x - tmpx,
-                    y = d3.event.y - tmpy;
-                force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
-                centerX = centerX + x / 2
-                centerY = centerY + y / 2;
-            })
-        )
-        var zoom = d3.zoom()
-            .scaleExtent([0.2, 1.5])//用于设置最小和最大的缩放比例  
-            .on("zoom", function () {
-                svg.selectAll('path').attr("transform", d3.event.transform);
-                svg.selectAll('marker').attr("transform", d3.event.transform);
-                svg.selectAll('circle').attr("transform", d3.event.transform);
-                svg.selectAll('text').attr("transform", d3.event.transform);
-                svg.selectAll('textPath').attr("transform", d3.event.transform);
-            })
-        svg.call(zoom)
+        setSvg(svg, force, centerX, centerY);
+
 
         link = link.data(links)
             .enter().append("path")
@@ -192,9 +163,9 @@ export default class Persons extends Component {
             })
             .attr('stroke-width', '3px')
             .call(d3.drag()
-                .on("start", dragstarted)
+                .on("start", (d) => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", dragended))
+                .on("end", (d) => { dragended(d, force) }))
             .on('click', function (d) {
                 _this.nodeClick.call(this, d, this);
                 _this.nodeColor(d);
@@ -214,9 +185,9 @@ export default class Persons extends Component {
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
             .call(d3.drag()
-                .on("start", dragstarted)
+                .on("start", (d) => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", dragended))
+                .on("end", (d) => { dragended(d, force) }))
             .on('click', function (d) {
                 _this.nodeClick.call(this, d, this);
                 _this.nodeColor(d);
@@ -244,24 +215,7 @@ export default class Persons extends Component {
         force.on("tick", function () {
             tick(link, node, svg_texts)
         });
-        function dragstarted(d) {
-            if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
-            d.fx = d.x;    //d.x是当前位置，d.fx是固定位置
-            d.fy = d.y;
-        }
 
-        function dragged(d) {
-            d.fx = d3.event.x;
-            d.fy = d3.event.y;
-        }
-
-        function dragended(d) {
-            if (!d3.event.active) force.alphaTarget(0);
-            // d.fx = d.x;       //解除dragged中固定的坐标
-            // d.fy = d.y;
-            d.fx = null;
-            d.fy = null;
-        }
     }
     //颜色设置  根绝类型设置
     fillColor(node) {

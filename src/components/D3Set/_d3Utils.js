@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 //设置线的编号
 function setLinkNumber(group, type) {
     if (group.length === 0) return;
@@ -124,4 +125,38 @@ function tick(link, node, svg_texts) {
         .attr("y", function (d) { return d.y + 5; });
 
 }
-export { setLinkNumber, setLinks, tick }
+//设置整体导向图的拖拽及放大缩小
+function setSvg(svg, force, centerX, centerY) {
+    let tmpx, tmpy;
+    svg.call(d3.drag()
+        .on("start", function (e) {
+            if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
+            tmpx = d3.event.x;
+            tmpy = d3.event.y;
+        })
+        .on("drag", function (e) {
+            let x = d3.event.x - tmpx,
+                y = d3.event.y - tmpy;
+            force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
+        })
+        .on("end", function (e) {
+            if (!d3.event.active) force.alphaTarget(0);
+            let x = d3.event.x - tmpx,
+                y = d3.event.y - tmpy;
+            force.force("center", d3.forceCenter(centerX + x / 2, centerY + y / 2));
+            centerX = centerX + x / 2
+            centerY = centerY + y / 2;
+        })
+    )
+    var zoom = d3.zoom()
+        .scaleExtent([0.2, 1.2])//用于设置最小和最大的缩放比例  
+        .on("zoom", function () {
+            svg.selectAll('path').attr("transform", d3.event.transform);
+            svg.selectAll('marker').attr("transform", d3.event.transform);
+            svg.selectAll('circle').attr("transform", d3.event.transform);
+            svg.selectAll('text').attr("transform", d3.event.transform);
+            svg.selectAll('textPath').attr("transform", d3.event.transform);
+        })
+    svg.call(zoom)
+}
+export { setLinkNumber, setLinks, tick, setSvg }
