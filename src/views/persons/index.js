@@ -113,21 +113,12 @@ export default class Persons extends Component {
         //开始设置
         let nodes = this.state.graph.nodes,
             links = this.state.graph.links;
-        //设置连线  双向及多条
+        //设置连线  双向及多条  处理数据
         setLinks(links);
 
+        //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
-        let chartDiv = d3.select('body').select('#chartId');
-        let svg = chartDiv.append("svg")
-            .attr('id', 'svgId')
-            .attr("width", w)
-            .attr("height", h);
-
-        var link = svg.selectAll(".link");
-        var node = svg.selectAll(".node");
-
-        //引入力导向图
         let centerX, centerY;
         centerX = w / 2;
         centerY = h / 2;
@@ -136,10 +127,15 @@ export default class Persons extends Component {
         force.nodes(nodes);
         force.force("link").links(links);
 
+        let svg = d3.select('body').select('#chartId').append("svg")
+            .attr('id', 'svgId')
+            .attr("width", w)
+            .attr("height", h);
         //整体拖拽 移动
         setSvg(svg, force, centerX, centerY);
 
-
+        var link = svg.selectAll(".link");
+        var node = svg.selectAll(".node");
         link = link.data(links)
             .enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
@@ -170,7 +166,8 @@ export default class Persons extends Component {
                 _this.nodeClick.call(this, d, this);
                 _this.nodeColor(d);
             });
-        _this.nodes = node;
+        this.nodes = node;
+        
         //节点上的文字
         var svg_texts = svg.selectAll("text")
             .data(nodes)
