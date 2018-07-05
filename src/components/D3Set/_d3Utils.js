@@ -124,20 +124,17 @@ function tick(link, node, svg_texts, path_text) {
     svg_texts.attr("x", function (d) { return d.x; })
         .attr("y", function (d) { return d.y + 5; });
 
-    // path_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2-10; })
-    //     .attr("y", function (d) { return (d.source.y + d.target.y) / 2-10; });
-    
-    path_text.attr('transform',function(d,i){
-            if (d.target.x<d.source.x){
-                let bbox = this.getBBox();
-                let rx = bbox.x+bbox.width/2;
-                let ry = bbox.y+bbox.height/2;
-                return 'rotate(180 '+rx+' '+ry+')';
-            }
-            else {
-                return 'rotate(0)';
-            }
-       });
+    path_text.attr('transform', function (d, i) {
+        if (d.target.x < d.source.x) {
+            let bbox = this.getBBox();
+            let rx = bbox.x + bbox.width / 2;
+            let ry = bbox.y + bbox.height / 2;
+            return 'rotate(180 ' + rx + ' ' + ry + ')';
+        }
+        else {
+            return 'rotate(0)';
+        }
+    });
 }
 //设置整体导向图的拖拽及放大缩小
 function setSvg(svg, g, force, centerX, centerY) {

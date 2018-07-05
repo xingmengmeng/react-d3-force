@@ -193,33 +193,6 @@ export default class Persons extends Component {
                 _this.nodeColor(d);
             });
         //线上的文字
-        /* let path_text = g.selectAll(".linetext")
-            .data(links)
-            .enter()
-            .append("text")
-            .attr("class", "linetext")
-            .attr('x', '0')
-            .attr('dy', '4')
-            .attr('text-anchor', 'middle')
-            .append('textPath').attr(
-                'xlink:href', function (d, i) {
-                    return '#path' + i;
-                }
-            )
-            .attr('startOffset', '50%')
-            .text(function (d) {
-                return d.type;
-            })
-            .on('click', _this.lineClick); */
-        /* let path_text = g.selectAll(".linetext")
-            .data(links)
-            .enter()
-            .append("text")
-            .attr("class", "linetext")
-            .text(function (d) {
-                return d.type;
-            })
-            .on('click', _this.lineClick); */
         let path_text = g.selectAll(".linetext")
             .data(links)
             .enter()
@@ -228,7 +201,6 @@ export default class Persons extends Component {
             .attr('x', '0')
             .attr('dy', '3')
             .attr('text-anchor', 'middle');
-
         path_text.append('textPath')
             .attr(
                 'xlink:href', function (d, i) {
