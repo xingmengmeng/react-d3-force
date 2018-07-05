@@ -93,7 +93,7 @@ function setLinks(links) {
 
 }
 //渲染的连续点击D3，即扩散动画
-function tick(link, node, svg_texts) {
+function tick(link, node, svg_texts, path_text) {
     link.attr('d', function (d) {
         //如果连接线连接的是同一个实体，则对path属性进行调整，绘制的圆弧属于长圆弧，同时对终点坐标进行微调，避免因坐标一致导致弧无法绘制 
         if (d.target === d.source) {
@@ -124,9 +124,23 @@ function tick(link, node, svg_texts) {
     svg_texts.attr("x", function (d) { return d.x; })
         .attr("y", function (d) { return d.y + 5; });
 
+    // path_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2-10; })
+    //     .attr("y", function (d) { return (d.source.y + d.target.y) / 2-10; });
+    
+    path_text.attr('transform',function(d,i){
+            if (d.target.x<d.source.x){
+                let bbox = this.getBBox();
+                let rx = bbox.x+bbox.width/2;
+                let ry = bbox.y+bbox.height/2;
+                return 'rotate(180 '+rx+' '+ry+')';
+            }
+            else {
+                return 'rotate(0)';
+            }
+       });
 }
 //设置整体导向图的拖拽及放大缩小
-function setSvg(svg, force, centerX, centerY) {
+function setSvg(svg, g, force, centerX, centerY) {
     let tmpx, tmpy;
     svg.call(d3.drag()
         .on("start", function (e) {
@@ -151,11 +165,8 @@ function setSvg(svg, force, centerX, centerY) {
     var zoom = d3.zoom()
         .scaleExtent([0.2, 1.2])//用于设置最小和最大的缩放比例  
         .on("zoom", function () {
-            svg.selectAll('path').attr("transform", d3.event.transform);
-            svg.selectAll('marker').attr("transform", d3.event.transform);
-            svg.selectAll('circle').attr("transform", d3.event.transform);
-            svg.selectAll('text').attr("transform", d3.event.transform);
-            svg.selectAll('textPath').attr("transform", d3.event.transform);
+            g.attr("transform", d3.event.transform);
+            g.attr("scale", d3.event.transform.k)
         })
     svg.call(zoom)
 }
