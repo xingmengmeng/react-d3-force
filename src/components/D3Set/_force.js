@@ -13,7 +13,7 @@ function setForce(centerX, centerY) {
         .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(centerX, centerY))
         .force("collide",d3.forceCollide().strength(0.2).iterations(5))
-        .force("link", d3.forceLink([]).distance(180)/*.strength(2)*/);//forceLink连接力 distance连接线长度 strength连接强度
+        .force("link", d3.forceLink([]).distance(250)/*.strength(2)*/);//forceLink连接力 distance连接线长度 strength连接强度
     return force;
 }
 export default setForce;

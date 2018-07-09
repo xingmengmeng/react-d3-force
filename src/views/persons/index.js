@@ -28,6 +28,8 @@ export default class Persons extends Component {
             LeftTabListResData: [],//预警提示数据
             persionMain: [],// 主体属性
             graph: [],
+            path_texts: '',//存储的线上文字背景集合
+            path_text_texts: '',//存储的线上文字背景
         }
     }
     componentDidMount() {
@@ -143,7 +145,10 @@ export default class Persons extends Component {
             .enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
             .attr('id', function (d, i) { return 'path' + i; })
-            .attr("class", "link");
+            .attr("class", "link")
+            .on("click", function (d) {
+                _this.showPathText(d.id)
+            });
         //节点
         node = node.data(nodes)
             .enter().append("circle")
@@ -193,13 +198,13 @@ export default class Persons extends Component {
                 _this.nodeColor(d);
             });
         //线上的文字
-        let path_text = g.selectAll(".linetext")
+        /* let path_text = g.selectAll(".linetext")
             .data(links)
             .enter()
             .append("text")
             .attr("class", "linetext")
             .attr('x', '0')
-            .attr('dy', '3')
+            .attr('dy', '5')
             .attr('text-anchor', 'middle');
         path_text.append('textPath')
             .attr(
@@ -211,12 +216,46 @@ export default class Persons extends Component {
             .text(function (d) {
                 return d.type;
             })
-            .on('click', _this.lineClick);
+            .on('click', _this.lineClick); */
+        let path_text_g = g.selectAll("rect")
+            .data(links)
+            .enter().append('g');
+        let path_text = path_text_g.append("rect")
+            .attr("id", (d) => `pathBg${d.id}`)
+            .attr("width", '120').attr("height", 26) //每个矩形的宽高
+            .attr("rx","2").attr("ry","2")
+            .attr("fill", "#000000").attr("fill-opacity", "0.6")
+            .attr("visibility", "hidden");
+        let path_text_text = path_text_g.append("text").text(function (d) { //添加文字描述
+            return d.type;
+        }).attr("visibility", "hidden").style("fill", "#ffffff").style("font-size", "12px");
+
+        this.setState({
+            path_texts: path_text,
+            path_text_texts: path_text_text,
+        })
 
         force.on("tick", function () {
-            tick(link, node, svg_texts, path_text)
+            tick(link, node, svg_texts, path_text, path_text_text)
         });
 
+    }
+    //点击线时候的操作
+    showPathText(id) {
+        this.state.path_texts.attr("visibility", function (d) {
+            if (d.id === id) {
+                return "visible"
+            } else {
+                return "hidden"
+            }
+        })
+        this.state.path_text_texts.attr("visibility", function (d) {
+            if (d.id === id) {
+                return "visible"
+            } else {
+                return "hidden"
+            }
+        })
     }
     //颜色设置  根绝类型设置
     fillColor(node) {

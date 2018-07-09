@@ -93,7 +93,7 @@ function setLinks(links) {
 
 }
 //渲染的连续点击D3，即扩散动画
-function tick(link, node, svg_texts, path_text) {
+function tick(link, node, svg_texts, path_text, path_text_text) {
     link.attr('d', function (d) {
         //如果连接线连接的是同一个实体，则对path属性进行调整，绘制的圆弧属于长圆弧，同时对终点坐标进行微调，避免因坐标一致导致弧无法绘制 
         if (d.target === d.source) {
@@ -124,7 +124,7 @@ function tick(link, node, svg_texts, path_text) {
     svg_texts.attr("x", function (d) { return d.x; })
         .attr("y", function (d) { return d.y + 5; });
 
-    path_text.attr('transform', function (d, i) {
+    /* path_text.attr('transform', function (d, i) {
         if (d.target.x < d.source.x) {
             let bbox = this.getBBox();
             let rx = bbox.x + bbox.width / 2;
@@ -134,7 +134,11 @@ function tick(link, node, svg_texts, path_text) {
         else {
             return 'rotate(0)';
         }
-    });
+    }); */
+    path_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2 - 60; })
+        .attr("y", function (d) { return (d.source.y + d.target.y) / 2 - 13; })
+    path_text_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2-20; })
+        .attr("y", function (d) { return (d.source.y + d.target.y) / 2+4; })
 }
 //设置整体导向图的拖拽及放大缩小
 function setSvg(svg, g, force, centerX, centerY) {

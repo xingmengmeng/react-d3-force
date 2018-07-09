@@ -199,9 +199,10 @@ export default class Persons extends Component {
             .append("text")
             .attr("class", "linetext")
             .attr('x', '0')
-            .attr('dy', '4')
-            .attr('text-anchor', 'middle')
-            .append('textPath').attr(
+            .attr('dy', '5')
+            .attr('text-anchor', 'middle');
+        path_text.append('textPath')
+            .attr(
                 'xlink:href', function (d, i) {
                     return '#path' + i;
                 }
