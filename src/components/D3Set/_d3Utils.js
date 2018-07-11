@@ -164,7 +164,7 @@ function setSvg(svg, g, force, centerX, centerY) {
         })
     )
     var zoom = d3.zoom()
-        .scaleExtent([0.2, 1.2])//用于设置最小和最大的缩放比例  
+        .scaleExtent([0, 1.2])//用于设置最小和最大的缩放比例  
         .on("zoom", function () {
             g.attr("transform", d3.event.transform);
             g.attr("scale", d3.event.transform.k)
