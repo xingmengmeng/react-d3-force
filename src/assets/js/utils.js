@@ -1,9 +1,9 @@
 function throttle(fn, delay, atleast) {
-    var timer = null;
-    var previous = null;
+    let timer = null;
+    let previous = null;
 
     return function () {
-        var now = +new Date();
+        let now = +new Date();
         if (!previous) previous = now;
         if (atleast && now - previous > atleast) {
             fn();

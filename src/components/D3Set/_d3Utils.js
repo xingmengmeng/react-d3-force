@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 function setLinkNumber(group, type) {
     if (group.length === 0) return;
     //对该分组内的关系按照方向进行分类，此处根据连接的实体ASCII值大小分成两部分  
-    var linksA = [], linksB = [];
+    let linksA = [], linksB = [];
     for (var i = 0; i < group.length; i++) {
         var link = group[i];
         if (link.source < link.target) {
@@ -62,11 +62,12 @@ function setLinkNumber(group, type) {
 //设置线的分组
 function setLinks(links) {
     //关系分组  
-    var linkGroup = {};
+    let linkGroup = {};
     //对连接线进行统计和分组，不区分连接线的方向，只要属于同两个实体，即认为是同一组  
-    var linkmap = {}
-    for (var i = 0; i < links.length; i++) {
-        var key = links[i].source < links[i].target ? links[i].source + ':' + links[i].target : links[i].target + ':' + links[i].source;
+    let linkmap = {};
+    for (let i = 0; i < links.length; i++) {
+        //console.log(JSON.stringify(links))
+        let key = links[i].source < links[i].target ? links[i].source + ':' + links[i].target : links[i].target + ':' + links[i].source;
         if (!linkmap.hasOwnProperty(key)) {
             linkmap[key] = 0;
         }
@@ -81,9 +82,9 @@ function setLinks(links) {
         let key = links[i].source < links[i].target ? links[i].source + ':' + links[i].target : links[i].target + ':' + links[i].source;
         links[i].size = linkmap[key];
         //同一组的关系进行编号  
-        var group = linkGroup[key];
-        var keyPair = key.split(':');
-        var type = 'noself';//标示该组关系是指向两个不同实体还是同一个实体  
+        let group = linkGroup[key];
+        let keyPair = key.split(':');
+        let type = 'noself';//标示该组关系是指向两个不同实体还是同一个实体  
         if (keyPair[0] === keyPair[1]) {
             type = 'self';
         }

@@ -121,11 +121,11 @@ export default class Persons extends Component {
         d3.select('#svgId').remove();   //删除整个SVG
         d3.select('#svgId').selectAll('*').remove();                    //清空SVG中的内容
         //开始设置
-        let nodes = this.state.graph.nodes,
-            links = this.state.graph.links;
+        let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
+            links = JSON.parse(JSON.stringify(this.state.graph.links));
         //设置连线  双向及多条  处理数据
         setLinks(links);
-
+        
         //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
@@ -136,6 +136,7 @@ export default class Persons extends Component {
         let force = _force(centerX, centerY);
         force.nodes(nodes);
         force.force("link").links(links);
+        
 
         let svg = d3.select('body').select('#chartId').append("svg")
             .attr('id', 'svgId')
