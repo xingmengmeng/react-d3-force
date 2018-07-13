@@ -23,7 +23,7 @@ class SearchInput extends Component {
                 { name: '进件编号', value: '3' },
             ],
             selected: '电话',
-            selectedId:'1',
+            selectedId: '1',
             errorFont: '请输入查询内容！',//查询结果不存在！
         }
     }
@@ -33,6 +33,10 @@ class SearchInput extends Component {
                 showTxtDisplay: 'none',
             })
         }
+    }
+    //很重要。。。。。
+    componentWillUnmount() {
+        document.body.onclick = null;
     }
     render() {
         let preWrapStyle = {

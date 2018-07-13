@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import * as d3 from "d3";
 import { post } from '../../api/http';
+import { throttle } from '../../assets/js/utils';
 import './index.less';
 import { DatePicker, Select } from 'antd';
 import locale from 'antd/lib/date-picker/locale/zh_CN';
@@ -43,6 +44,10 @@ export default class Persons extends Component {
         document.querySelector('.mainDetail').addEventListener('scroll', function () {
             this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
         })
+        window.onresize = throttle(this.resizeFn.bind(this), 200);
+    }
+    componentWillUnmount() {
+        window.onresize = null;
     }
     componentWillReceiveProps(nextProps) {
         let id = nextProps.match.params.id;
@@ -53,6 +58,9 @@ export default class Persons extends Component {
             this.getPersonGraph();
             this.getListAppInfo();
         })
+    }
+    resizeFn() {
+        this.drawChart();
     }
     //查询人物图信息
     getPersonGraph() {
@@ -223,7 +231,7 @@ export default class Persons extends Component {
         let path_text = path_text_g.append("rect")
             .attr("id", (d) => `pathBg${d.id}`)
             .attr("width", '120').attr("height", 26) //每个矩形的宽高
-            .attr("rx","2").attr("ry","2")
+            .attr("rx", "2").attr("ry", "2")
             .attr("fill", "#000000").attr("fill-opacity", "0.6")
             .attr("visibility", "hidden");
         let path_text_text = path_text_g.append("text").text(function (d) { //添加文字描述
