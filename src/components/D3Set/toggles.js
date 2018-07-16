@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 function isLinkLine(node, link) {
     return link.source.id === node.id || link.target.id === node.id;
 }
@@ -28,4 +29,13 @@ function toggleLineText(lineText, currNode, isHover) {
     }
 }
 
-export { toggleNode, toggleLine, toggleLineText }
+function deleteNode(nodeDate) {
+    if (this.classList.contains('nodeActive')) {
+        d3.select(this).classed('nodeActive', false);
+    } else {
+        d3.select(this).classed('nodeActive', true);
+    }
+    let selectedNodeData = d3.selectAll('.nodeActive').data();
+    return [...new Set(selectedNodeData)];
+}
+export { toggleNode, toggleLine, toggleLineText, deleteNode }

@@ -14,6 +14,7 @@ import Button from '../../components/Button';
 import _force from '../../components/D3Set/_force';
 import { setLinks, tick, setSvg } from '../../components/D3Set/_d3Utils';
 import { dragstarted, dragged, dragended } from '../../components/D3Set/nodeDrag';
+import { deleteNode } from '../../components/D3Set/toggles';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -44,7 +45,7 @@ export default class Persons extends Component {
         document.querySelector('.mainDetail').addEventListener('scroll', function () {
             this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
         })
-        window.onresize = throttle(this.resizeFn.bind(this), 200);
+        window.onresize = throttle(this.drawChart.bind(this), 200);
     }
     componentWillUnmount() {
         window.onresize = null;
@@ -58,9 +59,6 @@ export default class Persons extends Component {
             this.getPersonGraph();
             this.getListAppInfo();
         })
-    }
-    resizeFn() {
-        this.drawChart();
     }
     //查询人物图信息
     getPersonGraph() {
@@ -125,7 +123,7 @@ export default class Persons extends Component {
             links = JSON.parse(JSON.stringify(this.state.graph.links));
         //设置连线  双向及多条  处理数据
         setLinks(links);
-        
+
         //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
@@ -136,21 +134,17 @@ export default class Persons extends Component {
         let force = _force(centerX, centerY);
         force.nodes(nodes);
         force.force("link").links(links);
-        
+
 
         let svg = d3.select('body').select('#chartId').append("svg")
             .attr('id', 'svgId')
             .attr("width", w)
             .attr("height", h);
-        let g = svg.append('g')
-            .attr("width", w)
-            .attr("height", h);
+        let g = svg.append('g').attr("width", w).attr("height", h);
         //整体拖拽 移动
         setSvg(svg, g, force, centerX, centerY);
 
-        var link = g.selectAll(".link");
-        var node = g.selectAll(".node");
-        link = link.data(links)
+        let link = g.selectAll(".link").data(links)
             .enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
             .attr('id', function (d, i) { return 'path' + i; })
@@ -159,7 +153,7 @@ export default class Persons extends Component {
                 _this.showPathText(d.id)
             });
         //节点
-        node = node.data(nodes)
+        let node = g.selectAll(".node").data(nodes)
             .enter().append("circle")
             .attr("r", function (d) {
                 if (d.type === 'Person' || d.type === 'Main') {//根据type判断圈的大小
@@ -171,6 +165,7 @@ export default class Persons extends Component {
             .style("fill", function (node, i) {
                 return _this.fillColor(node);
             })
+            .attr("class","node")
             .attr('stroke', function (d) {
                 return _this.strColor(d);
             })
@@ -180,8 +175,9 @@ export default class Persons extends Component {
                 .on("drag", dragged)
                 .on("end", (d) => { dragended(d, force) }))
             .on('click', function (d) {
-                _this.nodeClick.call(this, d, this);
-                _this.nodeColor(d);
+                // _this.nodeClick.call(this, d, this);
+                // _this.nodeColor(d);
+                console.log(deleteNode.call(this,nodes));
             });
         this.nodes = node;
 
@@ -198,14 +194,11 @@ export default class Persons extends Component {
             })
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
+            .style('pointer-events', 'none')
             .call(d3.drag()
                 .on("start", (d) => { dragstarted(d, force) })
                 .on("drag", dragged)
                 .on("end", (d) => { dragended(d, force) }))
-            .on('click', function (d) {
-                _this.nodeClick.call(this, d, this);
-                _this.nodeColor(d);
-            });
         //线上的文字
         /* let path_text = g.selectAll(".linetext")
             .data(links)

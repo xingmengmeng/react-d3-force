@@ -83,29 +83,39 @@
             }
         }
     }
-    .imgMessUl{
+    .imgMessUl.allShow{
         height: 30px;
         li{
             float: left;
+            &.deletBtn{
+                padding:4px 10px;
+                float: right;
+                background: #f2faff;
+                border:1px @color-blue solid;
+                color: @color-blue;
+                font-size: 12px;
+                border-radius: 3px;
+            }
         }
         i{
             margin:0 10px 0 20px;
             float: left;
             width: 20px;
             height: 20px;
-            background: #a9cf54;
+            background: #fff;
+            border:2px #a9cf54 solid;
             border-radius: 50%;
             &.ls2{
-                background: #febf29;
+                border:2px #febf29 solid;
             }
             &.ls3{
-                background: #ff3008;
+                border:2px #ff3008 solid;
             }
             &.ls4{
-                background: #36c8e3;
+                border:2px #36c8e3 solid;
             }
             &.ls5{
-                background: #2a3842;
+                border:2px #2a3842 solid;
             }
         }
         span{
