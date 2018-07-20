@@ -165,19 +165,17 @@ export default class Persons extends Component {
             .style("fill", function (node, i) {
                 return _this.fillColor(node);
             })
-            .attr("class","node")
-            .attr('stroke', function (d) {
-                return _this.strColor(d);
-            })
+            .attr("class", "node")
+            .attr('stroke', d => this.strColor(d))
             .attr('stroke-width', '3px')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
+                .on("end", d => { dragended(d, force) }))
             .on('click', function (d) {
                 // _this.nodeClick.call(this, d, this);
                 // _this.nodeColor(d);
-                console.log(deleteNode.call(this,nodes));
+                console.log(deleteNode.call(this, nodes));
             });
         this.nodes = node;
 
@@ -189,16 +187,14 @@ export default class Persons extends Component {
             .style("fill", "#fff")
             .attr("x", 0)
             .attr("y", 0)
-            .text(function (d) {
-                return d.name;
-            })
+            .text(d => d.name)
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
             .style('pointer-events', 'none')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
+                .on("end", d => { dragended(d, force) }))
         //线上的文字
         /* let path_text = g.selectAll(".linetext")
             .data(links)
@@ -223,7 +219,7 @@ export default class Persons extends Component {
             .data(links)
             .enter().append('g');
         let path_text = path_text_g.append("rect")
-            .attr("id", (d) => `pathBg${d.id}`)
+            .attr("id", d => `pathBg${d.id}`)
             .attr("width", '120').attr("height", 26) //每个矩形的宽高
             .attr("rx", "2").attr("ry", "2")
             .attr("fill", "#000000").attr("fill-opacity", "0.6")
