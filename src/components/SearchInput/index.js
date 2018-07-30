@@ -88,7 +88,7 @@ class SearchInput extends Component {
                 </div>
                 <div className="left listWrap" style={txtWSty}>
                     <input type="text" value={this.state.value} onChange={this.change.bind(this)} onKeyUp={this.search.bind(this)} placeholder="请输入" style={txtWSty} />
-                    {!this.state.resData.length ?
+                    {!this.state.resData.length || this.state.value === '' ?
                         <span className='errorF' style={this.props.position === 'relt' ? errorSty2 : errorSty}>{this.state.errorFont}</span> :
                         <ul className="searchUl" style={txtUlSty} onClick={this.hideSelf.bind(this)}>
                             {/* <li> sdf  <Link to="/persons/22" className="right">查看图谱</Link> </li> */}
@@ -146,12 +146,25 @@ class SearchInput extends Component {
     }
     //搜索
     getList() {
+        if (this.state.value === '') {
+            this.setState({
+                showTxtDisplay: 'block',
+                errorFont: '请输入查询内容！'
+            });
+            return;
+        }
         post('/graphNew/search.gm', { 'searchType': this.state.selectedId, 'searchNo': this.state.value }).then(res => {
             if (res.data.code === '200') {
                 this.setState({
                     resData: res.data.data,
                     showPrvDisplay: 'none',
                     showTxtDisplay: 'block',
+                }, res => {
+                    if (this.state.resData.length === 0) {
+                        this.setState({
+                            errorFont: '查询结果为空！'
+                        })
+                    }
                 })
             }
         })

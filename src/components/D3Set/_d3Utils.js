@@ -136,10 +136,10 @@ function tick(link, node, svg_texts, path_text, path_text_text) {
             return 'rotate(0)';
         }
     }); */
-    path_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2 - 60; })
+    path_text && path_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2 - 60; })
         .attr("y", function (d) { return (d.source.y + d.target.y) / 2 - 13; })
-    path_text_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2-20; })
-        .attr("y", function (d) { return (d.source.y + d.target.y) / 2+4; })
+    path_text_text && path_text_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2 - 20; })
+        .attr("y", function (d) { return (d.source.y + d.target.y) / 2 + 4; })
 }
 //设置整体导向图的拖拽及放大缩小
 function setSvg(svg, g, force, centerX, centerY) {

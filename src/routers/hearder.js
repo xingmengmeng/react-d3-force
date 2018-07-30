@@ -64,7 +64,7 @@ export default class MainNav extends Component {
             <NavLink to='/settings' className='nav'>配置规则</NavLink>
             {this.state.hasSearchHearder ?
                 <div className="left headerS">
-                    <SearchInput preWidth='110' preHeight='38' txtWidth='247' txtHeight='38' btnWidth='74' btnHeight='38' btnBg='70%' position='relt'></SearchInput>
+                    <SearchInput preWidth='110' preHeight='38' txtWidth='321' txtHeight='38' btnWidth='74' btnHeight='38' btnBg='70%' position='relt'></SearchInput>
                 </div> : ''
             }
             <div className="right headRight">

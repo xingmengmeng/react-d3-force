@@ -63,8 +63,8 @@ export default class LeftTabList extends Component {
                         {this.props.LeftTabListData.map((item,index) =>
                             <tr key={index}>
                                 <td>{item.linkType}</td>
-                                <td className="blueF" ids={item.ids}>{item.linkEntryNum}</td>
-                                <td className="blueF" ids={item.ids}>{item.linkCustomerNum}</td>
+                                <td className="blueF" ids={item.ids} onClick={this.props.showDetailNode.bind(this,item.ids)}>{item.linkEntryNum}</td>
+                                <td className="blueF" ids={item.ids} onClick={this.props.showDetailNode.bind(this,item.ids)}>{item.linkCustomerNum}</td>
                             </tr>
                         )}
 

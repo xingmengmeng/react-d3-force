@@ -46,6 +46,15 @@ export default class Persons extends Component {
             this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
         })
         window.onresize = throttle(this.drawChart.bind(this), 200);
+
+        let oP=new Promise(function(resolve,reject){
+            resolve(42);
+        })
+        oP.then(val=>{
+            console.log(val);
+        }).catch(val=>{
+            console.log(val);
+        })
     }
     componentWillUnmount() {
         window.onresize = null;
@@ -78,7 +87,7 @@ export default class Persons extends Component {
     }
     //查询进件详细信息
     getListAppInfo() {
-        post('/graphNew/listAppInfo.gm', { 'appNo': this.state.id }).then(res => {
+        post('/graphNew/listAppInfo.gm', { 'nodeId': this.state.id }).then(res => {
             this.setState({
                 appDetailData: res.data.data,
             })
@@ -140,15 +149,11 @@ export default class Persons extends Component {
             .attr('id', 'svgId')
             .attr("width", w)
             .attr("height", h);
-        let g = svg.append('g')
-            .attr("width", w)
-            .attr("height", h);
+        let g = svg.append('g').attr("width", w).attr("height", h);
         //整体拖拽 移动
         setSvg(svg, g, force, centerX, centerY);
 
-        var link = g.selectAll(".link");
-        var node = g.selectAll(".node");
-        link = link.data(links)
+        let link = g.selectAll(".link").data(links)
             .enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
             .attr('id', function (d, i) { return 'path' + i; })
@@ -157,7 +162,7 @@ export default class Persons extends Component {
                 _this.showPathText(d.id)
             });
         //节点
-        node = node.data(nodes)
+        let node = g.selectAll(".node").data(nodes)
             .enter().append("circle")
             .attr("r", function (d) {
                 if (d.type === 'Person' || d.type === 'Main') {//根据type判断圈的大小
@@ -166,22 +171,20 @@ export default class Persons extends Component {
                     return 32;
                 }
             })
-            .attr("class","node")
             .style("fill", function (node, i) {
-                return "#ffffff";
+                return _this.fillColor(node);
             })
-            .attr('stroke', function (d) {
-                return _this.strColor(d);
-            })
+            .attr("class", "node")
+            .attr('stroke', d => this.strColor(d))
             .attr('stroke-width', '3px')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
+                .on("end", d => { dragended(d, force) }))
             .on('click', function (d) {
                 // _this.nodeClick.call(this, d, this);
                 // _this.nodeColor(d);
-                console.log(deleteNode.call(this,nodes));
+                console.log(deleteNode.call(this, nodes));
             });
         this.nodes = node;
 
@@ -190,25 +193,42 @@ export default class Persons extends Component {
             .data(nodes)
             .enter()
             .append("text")
-            .style("fill", "#333")
+            .style("fill", "#fff")
             .attr("x", 0)
             .attr("y", 0)
-            .text(function (d) {
-                return d.name;
-            })
+            .text(d => d.name)
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
             .style('pointer-events', 'none')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
+                .on("end", d => { dragended(d, force) }))
         //线上的文字
+        /* let path_text = g.selectAll(".linetext")
+            .data(links)
+            .enter()
+            .append("text")
+            .attr("class", "linetext")
+            .attr('x', '0')
+            .attr('dy', '5')
+            .attr('text-anchor', 'middle');
+        path_text.append('textPath')
+            .attr(
+                'xlink:href', function (d, i) {
+                    return '#path' + i;
+                }
+            )
+            .attr('startOffset', '50%')
+            .text(function (d) {
+                return d.type;
+            })
+            .on('click', _this.lineClick); */
         let path_text_g = g.selectAll("rect")
             .data(links)
             .enter().append('g');
         let path_text = path_text_g.append("rect")
-            .attr("id", (d) => `pathBg${d.id}`)
+            .attr("id", d => `pathBg${d.id}`)
             .attr("width", '120').attr("height", 26) //每个矩形的宽高
             .attr("rx", "2").attr("ry", "2")
             .attr("fill", "#000000").attr("fill-opacity", "0.6")
@@ -295,7 +315,7 @@ export default class Persons extends Component {
     }
     render() {
         return (
-            <section className="containers allShow">
+            <section className="containers">
                 <div className="leftSide" style={{ display: this.state.showLeft ? 'block' : 'none' }}>
                     <h5 className="hTit">预警提示</h5>
                     <div className="leftUlWraps">
@@ -334,7 +354,7 @@ export default class Persons extends Component {
                 <div className={this.state.showLeft ? 'rightSide' : 'rightSide2'}>
                     <div className="rightCon clearfix">
                         <div className="linkToWrap">
-                            <Link to={`/persons/${this.state.id}`}>切换为人物图</Link>
+                            <Link to={`/allShow/${this.state.id}`}>切换为全貌图</Link>
                         </div>
                         {/* 筛选条件 */}
                         <ul className="conUl">
@@ -364,7 +384,7 @@ export default class Persons extends Component {
                             </li>
                         </ul>
                         {/* 图表说明*/}
-                        <ul className="imgMessUl allShow">
+                        <ul className="imgMessUl">
                             <li>
                                 图释：
                             </li>
@@ -388,7 +408,6 @@ export default class Persons extends Component {
                                 <i className="ls5"></i>
                                 <span>黑名单</span>
                             </li>
-                            <li className="deletBtn">删除节点</li>
                         </ul>
                         <div className="drowImgDiv">
                             <div className="chartWrap box-shadow" id="chartId">
