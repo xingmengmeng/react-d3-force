@@ -177,7 +177,7 @@ function setSvg(svg, g, force, centerX, centerY) {
         })
     svg.call(zoom);
 }
-function goDefault(g, svg, force, w, h) {
+function goDefault(svg) {
     svg.call(zoom.transform, d3.zoomIdentity);
 }
 export { setLinkNumber, setLinks, tick, setSvg, goDefault }

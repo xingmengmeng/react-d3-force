@@ -30,6 +30,7 @@ export default class Persons extends Component {
             LeftTabListResData: [],//预警提示数据
             persionMain: [],// 主体属性
             graph: [],
+            tmpGroup: null,
             path_texts: '',//存储的线上文字背景集合
             path_text_texts: '',//存储的线上文字背景
             applyChannelInfo: {},//产品类型
@@ -128,6 +129,9 @@ export default class Persons extends Component {
             links = JSON.parse(JSON.stringify(this.state.graph.links));
         if (value === 'alls') {
             this.update(nodes, links);
+            this.setState({
+                tmpGroup: null,
+            })
             return;
         }
         //得到要删除的数据即要过滤掉的数据
@@ -147,16 +151,30 @@ export default class Persons extends Component {
                 }
             }
         }
+        this.setState({
+            tmpGroup: {
+                "nodes": newShowNodes,
+                "links": links,
+            }
+        }, () => {
+            console.log(this.state.tm)
+        })
         this.update(newShowNodes, links);
     }
     //画图
     drawChart() {
+        let graph;
+        if (this.state.tmpGroup) {
+            graph = this.state.tmpGroup;
+        } else {
+            graph = this.state.graph;
+        }
         //每次请求完重新加载显示图
         d3.select('#svgId').remove();   //删除整个SVG
         d3.select('#svgId').selectAll('*').remove();                    //清空SVG中的内容
         //开始设置
-        let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
-            links = JSON.parse(JSON.stringify(this.state.graph.links));
+        let nodes = JSON.parse(JSON.stringify(graph.nodes)),
+            links = JSON.parse(JSON.stringify(graph.links));
         //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
@@ -373,7 +391,7 @@ export default class Persons extends Component {
     }
     //点击  放大及拖拽回原始位置
     goToDefault() {
-        goDefault(this.g, this.svg, this.force, this.w, this.h);
+        goDefault(this.svg);
     }
     render() {
         return (
