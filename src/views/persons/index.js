@@ -12,9 +12,8 @@ import PersonLeftTab from '../../components/PersonLeftTab';
 import Button from '../../components/Button';
 //D3的方法
 import _force from '../../components/D3Set/_force';
-import { setLinks, tick, setSvg } from '../../components/D3Set/_d3Utils';
+import { setLinks, tick, setSvg, goDefault } from '../../components/D3Set/_d3Utils';
 import { dragstarted, dragged, dragended } from '../../components/D3Set/nodeDrag';
-import { deleteNode } from '../../components/D3Set/toggles';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -34,7 +33,7 @@ export default class Persons extends Component {
             path_texts: '',//存储的线上文字背景集合
             path_text_texts: '',//存储的线上文字背景
             applyChannelInfo: {},//产品类型
-            applyStatusInfo: {},//关联层级
+            applyHierarchyInfo: {},//关联层级
         }
     }
     componentDidMount() {
@@ -82,7 +81,7 @@ export default class Persons extends Component {
             if (res.data.code === '200') {
                 this.setState({
                     applyChannelInfo: res.data.data.applyChannelInfo,
-                    applyStatusInfo: res.data.data.applyStatusInfo
+                    applyHierarchyInfo: res.data.data.applyHierarchyInfo
                 })
             }
         })
@@ -122,6 +121,34 @@ export default class Persons extends Component {
     timeChange(data, dateStringAry) {
         console.log(dateStringAry);
     }
+    //产品类型改变
+    //关联层次改变
+    appHiChange(value) {
+        let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
+            links = JSON.parse(JSON.stringify(this.state.graph.links));
+        if (value === 'alls') {
+            this.update(nodes, links);
+            return;
+        }
+        //得到要删除的数据即要过滤掉的数据
+        let newNodes = nodes.filter(item => {
+            return item.depth !== value;
+        })
+        let newShowNodes = nodes.filter(item => {
+            return item.depth === value;
+        })
+        for (let linkIdx = 0; linkIdx < links.length; linkIdx++) {
+            let curLinks = links[linkIdx];
+            for (let j = 0; j < newNodes.length; j++) {
+                if (curLinks.source === newNodes[j].id || curLinks.target === newNodes[j].id) {
+                    links.splice(linkIdx, 1);
+                    linkIdx--;
+                    break;
+                }
+            }
+        }
+        this.update(newShowNodes, links);
+    }
     //画图
     drawChart() {
         //每次请求完重新加载显示图
@@ -130,44 +157,52 @@ export default class Persons extends Component {
         //开始设置
         let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
             links = JSON.parse(JSON.stringify(this.state.graph.links));
-        //设置连线  双向及多条  处理数据
-        setLinks(links);
-
         //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
-        let centerX, centerY;
-        centerX = w / 2;
-        centerY = h / 2;
-
-        let force = _force(centerX, centerY);
-        this.update(force, nodes, links, w, h, centerX, centerY);
-    }
-    //画图  数据渲染及更新
-    update(force, nodes, links, w, h, centerX, centerY) {
-        const _this = this;
-        force.nodes(nodes);
-        force.force("link").links(links);
+        const centerX = w / 2,
+            centerY = h / 2;
 
         let svg = d3.select('body').select('#chartId').append("svg")
             .attr('id', 'svgId')
             .attr("width", w)
             .attr("height", h);
         let g = svg.append('g').attr("width", w).attr("height", h);
+        const force = _force(centerX, centerY);
+
+        this.force = force;
+        this.g = g;
+        this.w = w;
+        this.h = h;
+        this.svg = svg;
+
+        this.update(nodes, links);
         //整体拖拽 移动
         setSvg(svg, g, force, centerX, centerY);
+    }
+    //画图  数据渲染及更新
+    update(nodes, links) {
+        setLinks(links);//设置连线  双向及多条  处理数据
+        links.forEach(function (e) {
+            e.source = nodes.filter(n => n.id === e.source)[0];
+            e.target = nodes.filter(n => n.id === e.target)[0];
+        });
+        let g = this.g;
+        this.force.nodes(nodes);
+        this.force.force("link").links(links);
 
-        let link = g.selectAll(".link").data(links);
+        let link = g.selectAll(".link").data(links, d => d.source.name + '_' + d.target.name);
         link.exit().remove();
         link = link.enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
+            .lower().merge(link)
             .attr('id', function (d, i) { return 'path' + i; })
             .attr("class", "link")
-            .on("click", function (d) {
-                _this.showPathText(d.id)
+            .on("click", d => {
+                this.showPathText(d.id)
             });
         //节点
-        let node = g.selectAll(".node").data(nodes);
+        let node = g.selectAll(".node").data(nodes, d => { return d.id; });
         node.exit().remove();
         node = node.enter().append("circle")
             .attr("r", function (d) {
@@ -184,10 +219,9 @@ export default class Persons extends Component {
                         return 24;
                 }
             })
-            .style("fill", function (node, i) {
-                return _this.fillColor(node);
-            })
+            .style("fill", node => this.fillColor(node))
             .attr("class", "node")
+            .merge(node)
             .attr('stroke', d => {
                 if (d.depth === '0') {
                     return '#659bff'
@@ -195,18 +229,18 @@ export default class Persons extends Component {
             })
             .attr('stroke-width', '5px')
             .call(d3.drag()
-                .on("start", d => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, this.force) })
                 .on("drag", dragged)
-                .on("end", d => { dragended(d, force) }))
-            .on('click', function (d) {
-                _this.nodeClick(d);
-                _this.nodeColor(d);
+                .on("end", d => { dragended(d, this.force) }))
+            .on('click', d => {
+                this.nodeClick(d);
+                this.nodeColor(d);
                 //console.log(deleteNode.call(this, nodes));
             });
         this.nodes = node;
 
         //节点上的文字
-        var svg_texts = g.selectAll("text").data(nodes);
+        var svg_texts = g.selectAll("text").data(nodes, d => { return d.id + '_text'; });
         svg_texts.exit().remove();
         svg_texts = svg_texts.enter()
             .append("text")
@@ -216,15 +250,20 @@ export default class Persons extends Component {
             .text(d => d.name)
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
+            .merge(svg_texts)
             .style('pointer-events', 'none')
             .call(d3.drag()
-                .on("start", d => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, this.force) })
                 .on("drag", dragged)
-                .on("end", d => { dragended(d, force) }))
+                .on("end", d => { dragended(d, this.force) }))
 
-        force.on("tick", function () {
+        this.force.on("tick", function () {
             tick(link, node, svg_texts, )
         });
+        this.force.alphaTarget(0.3).restart();
+        setTimeout(() => {
+            this.force.alphaTarget(0)
+        }, 500);
         //线上的文字
         /* let path_text_g = g.selectAll("rect").data(links);
         path_text_g.exit().remove();
@@ -237,7 +276,7 @@ export default class Persons extends Component {
             .attr("visibility", "hidden");
         let path_text_text = path_text_g.append("text").text(function (d) { //添加文字描述
             return d.type;
-        }).attr("visibility", "hidden").style("fill", "#ffffff").style("font-size", "12px");
+        }).attr("visibility", "hidden").style("fill", "#ffffff").attr('text-anchor', 'middle').style("font-size", "12px");
 
         this.setState({
             path_texts: path_text,
@@ -308,18 +347,21 @@ export default class Persons extends Component {
     }
     //点击力导向图中的点   改变颜色
     nodeColor(d) {
-        var _this = this;
-        this.nodes.attr("class", function (node) {
+        this.nodes.attr('stroke', node => {
             if (d.id === node.id) {
-                return 'circleActive';
-            } else {
-                return 'circle';
+                return '#659bff'
             }
-        });
+        }).attr('stroke-width', node => {
+            if (d.id === node.id) {
+                return '5px'
+            } else {
+                return '0px'
+            }
+        })
     }
     //点击预警提示信息
-    showDetailNode(ids){
-        for(let i=0;i<ids.length;i++){
+    showDetailNode(ids) {
+        for (let i = 0; i < ids.length; i++) {
             this.nodes.attr("class", function (node) {
                 if (ids[i] === node.id) {
                     return 'circleActive';
@@ -328,6 +370,10 @@ export default class Persons extends Component {
                 }
             });
         }
+    }
+    //点击  放大及拖拽回原始位置
+    goToDefault() {
+        goDefault(this.g, this.svg, this.force, this.w, this.h);
     }
     render() {
         return (
@@ -379,22 +425,23 @@ export default class Persons extends Component {
                                 <div className="left pickerWrap clearfix">
                                     <RangePicker format="YYYY-MM-DD HH:mm" showTime locale={locale} onChange={this.timeChange.bind(this)}></RangePicker>
                                 </div>
-                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
+                                {/* <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
                                     <Option value="lastmonth">近一月</Option>
                                     <Option value="lastweek">近一周</Option>
                                     <Option value="selfding">自定义</Option>
-                                </Select>
+                                </Select> */}
                                 <label htmlFor="">产品类型：</label>
-                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
+                                {/* <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
                                     <Option value="lastmonth">全部</Option>
                                     <Option value="lastweek">近一周</Option>
                                     <Option value="selfding">自定义</Option>
-                                </Select>
+                                </Select> */}
                                 <label htmlFor="">关联层次：</label>
-                                <Select defaultValue="lastmonth" style={{ width: 100 }} onChange={this.handleChange.bind(this)}>
-                                    <Option value="lastmonth">全部</Option>
-                                    <Option value="lastweek">近一周</Option>
-                                    <Option value="selfding">自定义</Option>
+                                <Select defaultValue="alls" style={{ width: 100 }} onChange={this.appHiChange.bind(this)}>
+                                    <Option value="alls">全部</Option>
+                                    {Object.keys(this.state.applyHierarchyInfo).map(item =>
+                                        <Option value={item} key={item}>{this.state.applyHierarchyInfo[item]}</Option>
+                                    )}
                                 </Select>
                                 <Button defaultValue="搜索"></Button>
                             </li>
@@ -433,6 +480,7 @@ export default class Persons extends Component {
                     </div>
                 </div>
                 {/* 右侧大块  end */}
+                <div className="goToDefault" onClick={this.goToDefault.bind(this)}></div>
             </section>
         )
     }

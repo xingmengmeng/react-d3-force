@@ -12,9 +12,9 @@ import PersonLeftTab from '../../components/PersonLeftTab';
 import Button from '../../components/Button';
 //D3的方法
 import _force from '../../components/D3Set/_force';
-import { setLinks, tick, setSvg } from '../../components/D3Set/_d3Utils';
+import { setLinks, tick, setSvg, goDefault } from '../../components/D3Set/_d3Utils';
 import { dragstarted, dragged, dragended } from '../../components/D3Set/nodeDrag';
-import { deleteNode } from '../../components/D3Set/toggles';
+//import { deleteNode } from '../../components/D3Set/toggles';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -24,6 +24,7 @@ export default class Persons extends Component {
         super();
         this.state = {
             id: '',//导航过来的id
+            nodeId: '',//主体属性的id
             showLeft: true,//左侧信息是否显示
             showAppDetail: false,//是否显示进件详情
             appDetailData: [],//进件详情数据
@@ -32,15 +33,18 @@ export default class Persons extends Component {
             graph: [],
             path_texts: '',//存储的线上文字背景集合
             path_text_texts: '',//存储的线上文字背景
+            applyChannelInfo: {},//产品类型
+            applyHierarchyInfo: {},//关联层级
         }
     }
     componentDidMount() {
         let id = this.props.match.params.id;
+        let nodeId = id.split(':')[0];
         this.setState({
             id: id,
+            nodeId: `Person@${nodeId}`,
         }, () => {
             this.getPersonGraph();
-            this.getListAppInfo();
         })
         document.querySelector('.mainDetail').addEventListener('scroll', function () {
             this.querySelector('thead').style.transform = 'translate(0, ' + this.scrollTop + 'px)';
@@ -57,7 +61,6 @@ export default class Persons extends Component {
             id: id,
         }, () => {
             this.getPersonGraph();
-            this.getListAppInfo();
         })
     }
     //查询人物图信息
@@ -75,20 +78,27 @@ export default class Persons extends Component {
                 })
             }
         })
+        post('/graphNew/personInit.gm').then(res => {
+            if (res.data.code === '200') {
+                this.setState({
+                    applyChannelInfo: res.data.data.applyChannelInfo,
+                    applyHierarchyInfo: res.data.data.applyHierarchyInfo
+                })
+            }
+        })
     }
     //查询进件详细信息
     getListAppInfo() {
-        post('/graphNew/listAppInfo.gm', { 'appNo': this.state.id }).then(res => {
+        post('/graphNew/listAppInfo.gm', { 'nodeId': this.state.nodeId }).then(res => {
             this.setState({
                 appDetailData: res.data.data,
+                showAppDetail: true,
             })
         })
     }
     //显示进件信息详情
     showAppDetaiFn() {
-        this.setState({
-            showAppDetail: true,
-        })
+        this.getListAppInfo();
     }
     changeShow() {
         if (this.state.showLeft) {
@@ -112,110 +122,162 @@ export default class Persons extends Component {
     timeChange(data, dateStringAry) {
         console.log(dateStringAry);
     }
+    //产品类型改变
+    //关联层次改变
+    appHiChange(value) {
+        let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
+            links = JSON.parse(JSON.stringify(this.state.graph.links));
+        if (value === 'alls') {
+            this.update(nodes, links);
+            return;
+        }
+        //得到要删除的数据即要过滤掉的数据
+        let newNodes = nodes.filter(item => {
+            return item.depth !== value;
+        })
+        let newShowNodes = nodes.filter(item => {
+            return item.depth === value;
+        })
+        for (let linkIdx = 0; linkIdx < links.length; linkIdx++) {
+            let curLinks = links[linkIdx];
+            for (let j = 0; j < newNodes.length; j++) {
+                if (curLinks.source === newNodes[j].id || curLinks.target === newNodes[j].id) {
+                    links.splice(linkIdx, 1);
+                    linkIdx--;
+                    break;
+                }
+            }
+        }
+        this.update(newShowNodes, links);
+    }
     //画图
     drawChart() {
-        const _this = this;
         //每次请求完重新加载显示图
         d3.select('#svgId').remove();   //删除整个SVG
         d3.select('#svgId').selectAll('*').remove();                    //清空SVG中的内容
         //开始设置
         let nodes = JSON.parse(JSON.stringify(this.state.graph.nodes)),
             links = JSON.parse(JSON.stringify(this.state.graph.links));
-        //设置连线  双向及多条  处理数据
-        setLinks(links);
-
         //设置 引入力导向图
         const w = document.querySelector('.drowImgDiv').clientWidth,//后期改为整块区域的宽高，待修改
             h = document.querySelector('.drowImgDiv').clientHeight;
-        let centerX, centerY;
-        centerX = w / 2;
-        centerY = h / 2;
-
-        let force = _force(centerX, centerY);
-        force.nodes(nodes);
-        force.force("link").links(links);
-
+        const centerX = w / 2,
+            centerY = h / 2;
 
         let svg = d3.select('body').select('#chartId').append("svg")
             .attr('id', 'svgId')
             .attr("width", w)
             .attr("height", h);
-        let g = svg.append('g')
-            .attr("width", w)
-            .attr("height", h);
+        let g = svg.append('g').attr("width", w).attr("height", h);
+        const force = _force(centerX, centerY);
+
+        this.force = force;
+        this.g = g;
+        this.w = w;
+        this.h = h;
+        this.svg = svg;
+
+        this.update(nodes, links);
         //整体拖拽 移动
         setSvg(svg, g, force, centerX, centerY);
+    }
+    //画图  数据渲染及更新
+    update(nodes, links) {
+        setLinks(links);//设置连线  双向及多条  处理数据
+        links.forEach(function (e) {
+            e.source = nodes.filter(n => n.id === e.source)[0];
+            e.target = nodes.filter(n => n.id === e.target)[0];
+        });
+        let g = this.g;
+        this.force.nodes(nodes);
+        this.force.force("link").links(links);
 
-        var link = g.selectAll(".link");
-        var node = g.selectAll(".node");
-        link = link.data(links)
-            .enter().append("path")
+        let link = g.selectAll(".link").data(links, d => d.source.name + '_' + d.target.name);
+        link.exit().remove();
+        link = link.enter().append("path")
             .attr('d', function (d) { return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y })
+            .lower().merge(link)
             .attr('id', function (d, i) { return 'path' + i; })
             .attr("class", "link")
-            .on("click", function (d) {
-                _this.showPathText(d.id)
+            .on("click", d => {
+                this.showPathText(d.id)
             });
         //节点
-        node = node.data(nodes)
-            .enter().append("circle")
+        let node = g.selectAll(".node").data(nodes, d => { return d.id; });
+        node.exit().remove();
+        node = node.enter().append("circle")
             .attr("r", function (d) {
-                if (d.type === 'Person' || d.type === 'Main') {//根据type判断圈的大小
-                    return 38;
-                } else {
-                    return 32;
+                switch (d.depth) {
+                    case '0':
+                        return 36;
+                    case '1':
+                        return 34;
+                    case '2':
+                        return 30;
+                    case '3':
+                        return 26;
+                    default:
+                        return 24;
                 }
             })
-            .attr("class","node")
-            .style("fill", function (node, i) {
-                return "#ffffff";
+            .style("fill", node => this.fillColor(node))
+            .attr("class", "node")
+            .merge(node)
+            .attr('stroke', d => {
+                if (d.depth === '0') {
+                    return '#659bff'
+                }
             })
-            .attr('stroke', function (d) {
-                return _this.strColor(d);
-            })
-            .attr('stroke-width', '3px')
+            .attr('stroke-width', '5px')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, this.force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
-            .on('click', function (d) {
-                // _this.nodeClick.call(this, d, this);
-                // _this.nodeColor(d);
-                console.log(deleteNode.call(this,nodes));
+                .on("end", d => { dragended(d, this.force) }))
+            .on('click', d => {
+                this.nodeClick(d);
+                this.nodeColor(d);
+                //console.log(deleteNode.call(this, nodes));
             });
         this.nodes = node;
 
         //节点上的文字
-        var svg_texts = g.selectAll("text")
-            .data(nodes)
-            .enter()
+        var svg_texts = g.selectAll("text").data(nodes, d => { return d.id + '_text'; });
+        svg_texts.exit().remove();
+        svg_texts = svg_texts.enter()
             .append("text")
-            .style("fill", "#333")
+            .style("fill", "#fff")
             .attr("x", 0)
             .attr("y", 0)
-            .text(function (d) {
-                return d.name;
-            })
+            .text(d => d.name)
             .attr('text-anchor', 'middle')
             .attr('class', 'nodesText')
+            .merge(svg_texts)
             .style('pointer-events', 'none')
             .call(d3.drag()
-                .on("start", (d) => { dragstarted(d, force) })
+                .on("start", d => { dragstarted(d, this.force) })
                 .on("drag", dragged)
-                .on("end", (d) => { dragended(d, force) }))
+                .on("end", d => { dragended(d, this.force) }))
+
+        this.force.on("tick", function () {
+            tick(link, node, svg_texts, )
+        });
+        this.force.alphaTarget(0.3).restart();
+        setTimeout(() => {
+            this.force.alphaTarget(0)
+        }, 500)
         //线上的文字
-        let path_text_g = g.selectAll("rect")
-            .data(links)
-            .enter().append('g');
+        /* let path_text_g = g.selectAll("rect").data(links);
+        path_text_g.exit().remove();
+        path_text_g = path_text_g.enter().append('g');
         let path_text = path_text_g.append("rect")
-            .attr("id", (d) => `pathBg${d.id}`)
+            .attr("id", d => `pathBg${d.id}`)
             .attr("width", '120').attr("height", 26) //每个矩形的宽高
             .attr("rx", "2").attr("ry", "2")
             .attr("fill", "#000000").attr("fill-opacity", "0.6")
             .attr("visibility", "hidden");
         let path_text_text = path_text_g.append("text").text(function (d) { //添加文字描述
             return d.type;
-        }).attr("visibility", "hidden").style("fill", "#ffffff").style("font-size", "12px");
+        }).attr("visibility", "hidden").style("fill", "#ffffff").attr('text-anchor', 'middle').style("font-size", "12px");
 
         this.setState({
             path_texts: path_text,
@@ -224,8 +286,7 @@ export default class Persons extends Component {
 
         force.on("tick", function () {
             tick(link, node, svg_texts, path_text, path_text_text)
-        });
-
+        }); */
     }
     //点击线时候的操作
     showPathText(id) {
@@ -246,52 +307,74 @@ export default class Persons extends Component {
     }
     //颜色设置  根绝类型设置
     fillColor(node) {
-        if (node.type === 'Person') {
-            return '#8588ff'
-        } else if (node.type === 'Main') {
-            return '#82c3e8'
-        } else if (node.type === 'Apply') {
-            return '#f66f13'
-        } else if (node.type === 'Address') {
-            return '#c3e20e'
-        } else if (node.type === 'Company') {
-            return '#ed6cac'
-        } else if (node.type === 'BankCard') {
-            return '#50e3c2'
-        } else if (node.type === 'SocialMediaId') {
-            return '#69aef4'
-        } else if (node.type === 'Device') {
-            return '#ffbf2f'
-        } else if (node.type === 'HouseProperty') {
-            return '#8de0ff'
-        } else if (node.type === 'Telephone') {
-            return '#fbc999'
-        } else {
-            return '#ccc'
+        if (node.status === '放款成功') {
+            return '#a9cf54'
+        } else if (node.status === '拒绝') {
+            return '#febf29'
+        } else if (node.status === '逾期') {
+            return '#ff3008'
+        } else if (node.status === '待审核') {
+            return '#36c8e3'
+        } else if (node.status === '黑名单') {
+            return '#2a3842'
         }
     }
     strColor(node) {
-        if (node.type === 'Person') {
-            return 'rgb(194,195,255)'
-        } else if (node.type === 'Main') {
-            return 'rgb(182,228,254)'
-        } else if (node.type === 'Apply') {
-            return 'rgb(250,183,137)'
-        } else if (node.type === 'Address') {
-            return 'rgb(225,240,134)'
-        } else if (node.type === 'Company') {
-            return 'rgb(246,181,213)'
-        } else if (node.type === 'BankCard') {
-            return 'rgb(167,241,224)'
-        } else if (node.type === 'SocialMediaId') {
-            return 'rgb(180,214,249)'
-        } else if (node.type === 'Device') {
-            return 'rgb(255,223,151)'
-        } else if (node.type === 'HouseProperty') {
-            return 'rgb(198,239,255)'
-        } else if (node.type === 'Telephone') {
-            return 'rgb(254,220,187)'
+        if (node.status === '放款成功') {
+            return '#a9cf54'
+        } else if (node.status === '拒绝') {
+            return '#febf29'
+        } else if (node.status === '逾期') {
+            return '#ff3008'
+        } else if (node.status === '待审核') {
+            return '#36c8e3'
+        } else if (node.status === '黑名单') {
+            return '#2a3842'
         }
+    }
+    nodeClick(d, cur) {
+        let nodeId = d.id;
+        this.setState({
+            nodeId: d.id,
+        })
+        post('/graphNew/personMain.gm', { 'nodeId': nodeId }).then(res => {
+            if (res.data.code === '200') {
+                this.setState({
+                    persionMain: res.data.data,
+                    showAppDetail: false,
+                })
+            }
+        })
+    }
+    //点击力导向图中的点   改变颜色
+    nodeColor(d) {
+        this.nodes.attr('stroke', node => {
+            if (d.id === node.id) {
+                return '#659bff'
+            }
+        }).attr('stroke-width', node => {
+            if (d.id === node.id) {
+                return '5px'
+            } else {
+                return '0px'
+            }
+        })
+    }
+    //点击预警提示信息
+    showDetailNode(ids) {
+        for (let i = 0; i < ids.length; i++) {
+            this.nodes.attr("class", function (node) {
+                if (ids[i] === node.id) {
+                    return 'circleActive';
+                } else {
+                    return 'circle';
+                }
+            });
+        }
+    }
+    //点击  放大及拖拽回原始位置
+    goToDefault() {
+        goDefault(this.g, this.svg, this.force, this.w, this.h);
     }
     render() {
         return (
@@ -299,7 +382,7 @@ export default class Persons extends Component {
                 <div className="leftSide" style={{ display: this.state.showLeft ? 'block' : 'none' }}>
                     <h5 className="hTit">预警提示</h5>
                     <div className="leftUlWraps">
-                        <LeftTabList LeftTabListData={this.state.LeftTabListResData}></LeftTabList>
+                        <LeftTabList LeftTabListData={this.state.LeftTabListResData} showDetailNode={this.showDetailNode.bind(this)}></LeftTabList>
                     </div>
                     <h5 className="hTit">主体属性</h5>
                     <ul className="leftMainUl clearfix">

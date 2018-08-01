@@ -142,10 +142,15 @@ function tick(link, node, svg_texts, path_text, path_text_text) {
         .attr("y", function (d) { return (d.source.y + d.target.y) / 2 + 4; })
 }
 //设置整体导向图的拖拽及放大缩小
+let zoom;
 function setSvg(svg, g, force, centerX, centerY) {
-    let tmpx, tmpy;
+    /* let tmpx, tmpy;
     svg.call(d3.drag()
         .on("start", function (e) {
+            if (!isFirst) {
+                force.force("center", d3.forceCenter(centerX, centerY));
+                isFirst = true;
+            }
             if (!d3.event.active) force.alphaTarget(0.3).restart();  //restart是重新恢复模拟
             tmpx = d3.event.x;
             tmpy = d3.event.y;
@@ -163,13 +168,16 @@ function setSvg(svg, g, force, centerX, centerY) {
             centerX = centerX + x / 2
             centerY = centerY + y / 2;
         })
-    )
-    var zoom = d3.zoom()
+    ) */
+    zoom = d3.zoom()
         .scaleExtent([0, 1.2])//用于设置最小和最大的缩放比例  
         .on("zoom", function () {
             g.attr("transform", d3.event.transform);
-            g.attr("scale", d3.event.transform.k)
+            g.attr("scale", d3.event.transform.k);
         })
-    svg.call(zoom)
+    svg.call(zoom);
 }
-export { setLinkNumber, setLinks, tick, setSvg }
+function goDefault(g, svg, force, w, h) {
+    svg.call(zoom.transform, d3.zoomIdentity);
+}
+export { setLinkNumber, setLinks, tick, setSvg, goDefault }
